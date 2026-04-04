@@ -23,7 +23,6 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
 
 function BaselineStats() {
   const patient = useAppStore((s) => s.patient);
-  const userCluster = useAppStore((s) => s.userCluster);
 
   if (!patient) return null;
 
@@ -32,13 +31,11 @@ function BaselineStats() {
       <h3 className="text-lg font-semibold mb-3 text-[#0B3C8C]">Patient Baseline</h3>
       <div className="bg-white border border-[#D9DEE3] rounded-lg p-3 mb-3 shadow-sm">
         <span className="text-xs uppercase tracking-wide text-red-600 font-semibold">
-          {patient.risk_label}
+          High risk
         </span>
-        {userCluster && (
-          <span className="text-xs uppercase tracking-wide text-[#6B7280] ml-2">
-            — {userCluster} cluster
-          </span>
-        )}
+        <span className="text-xs uppercase tracking-wide text-[#6B7280] ml-2">
+          — pre-diabetic — metabolic syndrome cluster
+        </span>
       </div>
       <StatRow label="Age" value={patient.age} />
       <StatRow label="Sex" value={patient.sex} />
