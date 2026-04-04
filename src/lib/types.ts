@@ -53,6 +53,8 @@ export interface DigitalTwin {
   outcome_type: "positive" | "negative";
   coordinate: Coordinate;
   outcome: string;
+  lifestyle_changes: string;
+  outcome_bullets: string[];
 }
 
 export interface NeighborsResponse {

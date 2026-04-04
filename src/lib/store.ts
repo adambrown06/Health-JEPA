@@ -85,7 +85,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   userCoord: null,
   setUserCoord: (userCoord) => set({ userCoord }),
 
-  userClusterId: 1,
+  userClusterId: 0,
 
   userCluster: null,
   setUserCluster: (userCluster) => set({ userCluster }),

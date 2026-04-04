@@ -23,18 +23,15 @@ body {
   color: var(--color-brand-gray-dark);
 }
 
-/* Single source of truth for shell + 3D canvas (must match exactly) */
 html,
 body {
   background-color: #f4f6f8;
 }
 
-/* Logo PNGs often include a white matte; multiply blends it into #F4F6F8 */
 .logo-on-brand {
   mix-blend-mode: multiply;
 }
 
-/* Teal gradient text (brand “Compass”) */
 .text-brand-compass {
   background: linear-gradient(
     135deg,
@@ -47,7 +44,6 @@ body {
   color: transparent;
 }
 
-/* Decorative tagline rule */
 .tagline-rule {
   height: 1px;
   background: linear-gradient(
@@ -57,4 +53,76 @@ body {
     #d9dee3 85%,
     transparent
   );
+}
+
+/* ── Landing page ── */
+
+.landing-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(46, 196, 199, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(11, 60, 140, 0.05) 0%, transparent 50%),
+    #f4f6f8;
+}
+
+@keyframes icon-glow {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+.icon-glow-ring {
+  animation: icon-glow 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s ease-out both;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.btn-shimmer {
+  background-size: 200% 100%;
+  background-image: linear-gradient(
+    105deg,
+    #2ec4c7 0%,
+    #1fa3b3 30%,
+    #5ee0e3 50%,
+    #1fa3b3 70%,
+    #0e7c91 100%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(217, 222, 227, 0.6);
+}
+
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 196, 199, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(46, 196, 199, 0); }
+}
+.dot-active {
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
 }

@@ -5,11 +5,11 @@ import { fetchInterventions } from "@/lib/api";
 import type { WearableMetric } from "@/lib/types";
 
 const CLUSTER_COLORS: Record<number, string> = {
-  0: "#22d3ee",
-  1: "#ff4d6d",
-  2: "#ffb703",
-  3: "#4cc9f0",
-  4: "#06ffa5",
+  0: "#ef4444", // red — highest risk
+  1: "#f97316", // orange
+  2: "#eab308", // yellow
+  3: "#84cc16", // lime
+  4: "#22c55e", // green — lowest risk
 };
 
 function StatRow({ label, value }: { label: string; value: string | number }) {

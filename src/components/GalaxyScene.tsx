@@ -5,44 +5,35 @@ import {
   useMemo,
   useEffect,
   useLayoutEffect,
-  useCallback,
   Component,
   type ReactNode,
 } from "react";
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { useAppStore } from "@/lib/store";
-import type { GalaxyPoint, DigitalTwin } from "@/lib/types";
 
-/** High-chroma palette so clusters read clearly on #F4F6F8 */
+/** Risk gradient: 0 = highest risk (red) → 4 = lowest risk (green) */
 const CLUSTER_COLORS: Record<number, string> = {
-  0: "#22d3ee", // cyan
-  1: "#ff4d6d", // hot rose / metabolic
-  2: "#ffb703", // amber
-  3: "#4cc9f0", // sky
-  4: "#06ffa5", // mint / active
+  0: "#ef4444",
+  1: "#f97316",
+  2: "#eab308",
+  3: "#84cc16",
+  4: "#22c55e",
 };
 
-const PRIMARY_CLUSTER = 1;
-/** Must match app shell / upload screen (#F4F6F8) */
+const RISK_LABELS: Record<number, string> = {
+  0: "Critical Risk",
+  1: "High Risk",
+  2: "Moderate Risk",
+  3: "Low Risk",
+  4: "Minimal Risk",
+};
+
+const PRIMARY_CLUSTER = 0;
 const BRAND_BG = "#f4f6f8";
 const DOT_RADIUS = 0.2;
 const DOT_SEGMENTS = 8;
-
-/** Per-vertex white so instanceColor is not multiplied by missing (black) vertex colors. */
-function sphereGeometryWithWhiteColors(
-  radius: number,
-  widthSegments: number,
-  heightSegments: number
-) {
-  const g = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-  const n = g.attributes.position.count;
-  const white = new Float32Array(n * 3);
-  white.fill(1);
-  g.setAttribute("color", new THREE.BufferAttribute(white, 3));
-  return g;
-}
 
 class SceneErrorBoundary extends Component<
   { children: ReactNode },
@@ -67,12 +58,24 @@ class SceneErrorBoundary extends Component<
   }
 }
 
-// --- All galaxy points rendered as a single InstancedMesh ---
+/** Per-vertex white so instanceColor works correctly. */
+function sphereGeometryWithWhiteColors(
+  radius: number,
+  widthSegments: number,
+  heightSegments: number
+) {
+  const g = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+  const n = g.attributes.position.count;
+  const white = new Float32Array(n * 3);
+  white.fill(1);
+  g.setAttribute("color", new THREE.BufferAttribute(white, 3));
+  return g;
+}
+
+// --- All galaxy points as visual (non-interactive) dots ---
 
 function PatientDots() {
   const galaxyPoints = useAppStore((s) => s.galaxyPoints);
-  const selectedId = useAppStore((s) => s.selectedPatientId);
-  const selectById = useAppStore((s) => s.selectPatientById);
   const meshRef = useRef<THREE.InstancedMesh>(null!);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const geometry = useMemo(
@@ -107,43 +110,13 @@ function PatientDots() {
     meshRef.current.instanceColor = attr;
   }, [galaxyPoints, dummy]);
 
-  // Pulse the selected instance
-  useFrame((state) => {
-    if (!meshRef.current || galaxyPoints.length === 0) return;
-    const selIdx = selectedId
-      ? galaxyPoints.findIndex((p) => p.id === selectedId)
-      : -1;
-
-    if (selIdx >= 0) {
-      const pt = galaxyPoints[selIdx];
-      const s = 1.8 + Math.sin(state.clock.elapsedTime * 3) * 0.4;
-      dummy.position.set(pt.x, pt.y, pt.z);
-      dummy.scale.setScalar(s);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(selIdx, dummy.matrix);
-      meshRef.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  const handleClick = useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      e.stopPropagation();
-      const idx = e.instanceId;
-      if (idx !== undefined && galaxyPoints[idx]) {
-        const clicked = galaxyPoints[idx];
-        selectById(selectedId === clicked.id ? null : clicked.id);
-      }
-    },
-    [galaxyPoints, selectedId, selectById]
-  );
-
   if (galaxyPoints.length === 0) return null;
 
   return (
     <instancedMesh
       ref={meshRef}
       args={[geometry, undefined, galaxyPoints.length]}
-      onClick={handleClick}
+      raycast={() => null}
     >
       <meshStandardMaterial
         vertexColors
@@ -153,136 +126,6 @@ function PatientDots() {
       />
     </instancedMesh>
   );
-}
-
-// --- Twin dots: larger, brighter, rendered on top of galaxy dots ---
-
-function TwinDots() {
-  const twins = useAppStore((s) => s.twins);
-  const selectedId = useAppStore((s) => s.selectedPatientId);
-  const selectById = useAppStore((s) => s.selectPatientById);
-  const meshRef = useRef<THREE.InstancedMesh>(null!);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-  const geometry = useMemo(
-    () => sphereGeometryWithWhiteColors(DOT_RADIUS, 12, 12),
-    []
-  );
-
-  useLayoutEffect(() => {
-    if (!meshRef.current || twins.length === 0) return;
-
-    const color = new THREE.Color();
-    const colors = new Float32Array(twins.length * 3);
-
-    for (let i = 0; i < twins.length; i++) {
-      const t = twins[i];
-      dummy.position.set(t.coordinate.x, t.coordinate.y, t.coordinate.z);
-      dummy.scale.setScalar(1.6);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(i, dummy.matrix);
-
-      color.set(t.outcome_type === "positive" ? "#34f5c5" : "#ff5c8a");
-      colors[i * 3] = color.r;
-      colors[i * 3 + 1] = color.g;
-      colors[i * 3 + 2] = color.b;
-    }
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    const attr = new THREE.InstancedBufferAttribute(colors, 3);
-    attr.needsUpdate = true;
-    meshRef.current.instanceColor = attr;
-  }, [twins, dummy]);
-
-  useFrame((state) => {
-    if (!meshRef.current || twins.length === 0) return;
-    const selIdx = selectedId
-      ? twins.findIndex((t) => t.id === selectedId)
-      : -1;
-
-    if (selIdx >= 0) {
-      const t = twins[selIdx];
-      const s = 2.0 + Math.sin(state.clock.elapsedTime * 3) * 0.5;
-      dummy.position.set(t.coordinate.x, t.coordinate.y, t.coordinate.z);
-      dummy.scale.setScalar(s);
-      dummy.updateMatrix();
-      meshRef.current.setMatrixAt(selIdx, dummy.matrix);
-      meshRef.current.instanceMatrix.needsUpdate = true;
-    }
-  });
-
-  const handleClick = useCallback(
-    (e: ThreeEvent<MouseEvent>) => {
-      e.stopPropagation();
-      const idx = e.instanceId;
-      if (idx !== undefined && twins[idx]) {
-        selectById(selectedId === twins[idx].id ? null : twins[idx].id);
-      }
-    },
-    [twins, selectedId, selectById]
-  );
-
-  if (twins.length === 0) return null;
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, undefined, twins.length]}
-      onClick={handleClick}
-    >
-      <meshStandardMaterial
-        vertexColors
-        emissiveIntensity={0.45}
-        roughness={0.22}
-        metalness={0.05}
-        toneMapped
-      />
-    </instancedMesh>
-  );
-}
-
-// --- Tooltip for selected patient ---
-
-function SelectionTooltip() {
-  const selectedId = useAppStore((s) => s.selectedPatientId);
-  const selectedTwin = useAppStore((s) => s.selectedTwin);
-  const selectedPoint = useAppStore((s) => s.selectedPoint);
-  const clusterNames = useAppStore((s) => s.clusterNames);
-
-  if (!selectedId) return null;
-
-  if (selectedTwin) {
-    const c = selectedTwin.coordinate;
-    return (
-      <Html position={[c.x, c.y + 0.7, c.z]} center>
-        <div className="bg-[#F4F6F8] text-[#0B3C8C] text-xs px-2.5 py-1.5 rounded-lg pointer-events-none select-none border border-[#D9DEE3] shadow-md max-w-[220px]">
-          <div className="font-semibold">{selectedTwin.label}</div>
-          <div className="text-[10px] text-[#6B7280] mt-0.5">
-            {(selectedTwin.similarity * 100).toFixed(0)}% match · {selectedTwin.cluster_name}
-          </div>
-          <div className={`text-[10px] mt-0.5 font-medium ${selectedTwin.outcome_type === "positive" ? "text-emerald-700" : "text-red-700"}`}>
-            {selectedTwin.outcome_type === "positive" ? "Positive" : "Negative"} outcome
-          </div>
-        </div>
-      </Html>
-    );
-  }
-
-  if (selectedPoint) {
-    const cName = clusterNames[String(selectedPoint.cluster_id)] ?? "Unknown";
-    return (
-      <Html position={[selectedPoint.x, selectedPoint.y + 0.6, selectedPoint.z]} center>
-        <div className="bg-[#F4F6F8] text-[#0B3C8C] text-xs px-2.5 py-1.5 rounded-lg pointer-events-none select-none border border-[#D9DEE3] shadow-md max-w-[200px]">
-          <div className="font-semibold">{selectedPoint.label}</div>
-          <div className="text-[10px] text-[#6B7280] mt-0.5">{cName}</div>
-          <div className={`text-[10px] mt-0.5 font-medium ${selectedPoint.outcome_type === "positive" ? "text-emerald-700" : "text-red-700"}`}>
-            {selectedPoint.outcome_type === "positive" ? "Positive" : "Negative"} outcome
-          </div>
-        </div>
-      </Html>
-    );
-  }
-
-  return null;
 }
 
 // --- Cluster labels ---
@@ -303,28 +146,48 @@ function IslandLabel({
   const focusedId = useAppStore((s) => s.focusedClusterId);
   const setFocused = useAppStore((s) => s.setFocusedClusterId);
   const isFocused = focusedId === clusterId;
+  const anyFocused = focusedId !== null;
+  const riskLabel = RISK_LABELS[clusterId] ?? "Unknown";
+  const clusterColor = CLUSTER_COLORS[clusterId] ?? "#a5b4fc";
+
+  if (anyFocused && isFocused) return null;
 
   return (
-    <Html position={[center[0], center[1] + (isPrimary ? 6 : 4.5), center[2]]} center>
+    <Html position={[center[0], center[1] + (isPrimary ? 7 : 5.5), center[2]]} center>
       <button
         onClick={(e) => {
           e.stopPropagation();
           setFocused(isFocused ? null : clusterId);
         }}
-        className={`whitespace-nowrap text-center transition-opacity cursor-pointer ${
-          isFocused ? "opacity-100" : "opacity-50 hover:opacity-80"
+        className={`whitespace-nowrap text-center cursor-pointer transition-all duration-200 ${
+          anyFocused ? "opacity-40" : "hover:scale-105"
         }`}
       >
         <div
-          className={`font-semibold uppercase tracking-widest ${
-            isPrimary ? "text-sm" : "text-[10px]"
-          }`}
-          style={{ color: CLUSTER_COLORS[clusterId] ?? "#a5b4fc" }}
+          className="rounded-xl px-4 py-2.5 shadow-lg border backdrop-blur-sm"
+          style={{
+            background: "rgba(255,255,255,0.92)",
+            borderColor: clusterColor,
+            borderWidth: isPrimary ? 2 : 1,
+          }}
         >
-          {name}
-        </div>
-        <div className="text-[9px] text-[#6B7280] mt-0.5">
-          {isPrimary ? "Your primary cluster" : `${count} patients`}
+          <div
+            className={`font-extrabold tracking-wide leading-tight ${
+              isPrimary ? "text-base" : "text-sm"
+            }`}
+            style={{ color: clusterColor }}
+          >
+            {name}
+          </div>
+          <div
+            className="text-[11px] font-bold mt-0.5 uppercase tracking-widest"
+            style={{ color: clusterColor, opacity: 0.75 }}
+          >
+            {riskLabel}
+          </div>
+          <div className="text-[11px] text-[#5C6773] mt-0.5 font-medium">
+            {isPrimary ? `Your cluster · ${count} patients` : `${count} patients`}
+          </div>
         </div>
       </button>
     </Html>
@@ -335,31 +198,12 @@ function IslandLabel({
 
 function CameraController() {
   const focusedClusterId = useAppStore((s) => s.focusedClusterId);
-  const selectedPatientId = useAppStore((s) => s.selectedPatientId);
-  const selectedTwin = useAppStore((s) => s.selectedTwin);
-  const selectedPoint = useAppStore((s) => s.selectedPoint);
   const galaxyPoints = useAppStore((s) => s.galaxyPoints);
   const { camera } = useThree();
   const target = useRef(new THREE.Vector3(0, 2, 0));
   const desiredPos = useRef(new THREE.Vector3(0, 28, 35));
 
   useEffect(() => {
-    if (selectedPatientId) {
-      let px = 0, py = 0, pz = 0;
-      if (selectedTwin) {
-        px = selectedTwin.coordinate.x;
-        py = selectedTwin.coordinate.y;
-        pz = selectedTwin.coordinate.z;
-      } else if (selectedPoint) {
-        px = selectedPoint.x;
-        py = selectedPoint.y;
-        pz = selectedPoint.z;
-      }
-      target.current.set(px, py, pz);
-      desiredPos.current.set(px + 3, py + 3, pz + 5);
-      return;
-    }
-
     if (focusedClusterId !== null) {
       const pts = galaxyPoints.filter((p) => p.cluster_id === focusedClusterId);
       if (pts.length > 0) {
@@ -367,8 +211,7 @@ function CameraController() {
         for (const p of pts) { sx += p.x; sy += p.y; sz += p.z; }
         const n = pts.length;
         const cx = sx / n, cy = sy / n, cz = sz / n;
-        const isPrimary = focusedClusterId === PRIMARY_CLUSTER;
-        const dist = isPrimary ? 12 : 8;
+        const dist = focusedClusterId === PRIMARY_CLUSTER ? 14 : 10;
         target.current.set(cx, cy, cz);
         desiredPos.current.set(cx + dist * 0.4, cy + dist * 0.6, cz + dist);
         return;
@@ -377,7 +220,7 @@ function CameraController() {
 
     target.current.set(0, 0, 0);
     desiredPos.current.set(0, 28, 35);
-  }, [focusedClusterId, selectedPatientId, selectedTwin, selectedPoint, galaxyPoints]);
+  }, [focusedClusterId, galaxyPoints]);
 
   useFrame(() => {
     camera.position.lerp(desiredPos.current, 0.03);
@@ -424,7 +267,7 @@ function TrajectoryLine() {
 function SceneContents() {
   const galaxyPoints = useAppStore((s) => s.galaxyPoints);
   const clusterNames = useAppStore((s) => s.clusterNames);
-  const clearSelection = useAppStore((s) => s.clearSelection);
+  const setFocused = useAppStore((s) => s.setFocusedClusterId);
 
   const clusterInfo = useMemo(() => {
     const acc: Record<number, { sx: number; sy: number; sz: number; n: number }> = {};
@@ -450,15 +293,13 @@ function SceneContents() {
       <pointLight position={[15, 20, 15]} intensity={0.55} />
       <pointLight position={[-15, 15, -15]} intensity={0.38} />
 
-      {/* Click on empty space (canvas miss) to deselect */}
-      <mesh visible={false} onClick={() => clearSelection()}>
+      {/* Click empty space to deselect */}
+      <mesh visible={false} onClick={() => setFocused(null)}>
         <sphereGeometry args={[150, 8, 8]} />
         <meshBasicMaterial side={THREE.BackSide} />
       </mesh>
 
       <PatientDots />
-      <TwinDots />
-      <SelectionTooltip />
 
       {clusterInfo.map(({ clusterId, center, count }) => (
         <IslandLabel

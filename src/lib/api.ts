@@ -7,7 +7,7 @@ import type {
   WearableData,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init);
@@ -15,19 +15,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export async function ingestFile(): Promise<IngestResponse> {
-  const pdfRes = await fetch("/mock_mychart.pdf");
-  const blob = await pdfRes.blob();
-
-  const form = new FormData();
-  form.append("file", blob, "mychart_export.pdf");
-
-  const res = await fetch(`${BASE}/api/v1/ingest`, {
-    method: "POST",
-    body: form,
-  });
-  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
-  return res.json() as Promise<IngestResponse>;
+export function ingestFile(): Promise<IngestResponse> {
+  return request<IngestResponse>("/api/v1/ingest", { method: "POST" });
 }
 
 export function fetchGalaxy(): Promise<GalaxyResponse> {
