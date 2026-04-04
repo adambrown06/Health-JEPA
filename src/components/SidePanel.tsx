@@ -1,8 +1,16 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { fetchNeighbors, fetchInterventions } from "@/lib/api";
+import { fetchInterventions } from "@/lib/api";
 import type { WearableMetric } from "@/lib/types";
+
+const CLUSTER_COLORS: Record<number, string> = {
+  0: "#6b7280",
+  1: "#ef4444",
+  2: "#f59e0b",
+  3: "#3b82f6",
+  4: "#22c55e",
+};
 
 function StatRow({ label, value }: { label: string; value: string | number }) {
   return (
@@ -49,7 +57,7 @@ function BaselineStats() {
   );
 }
 
-// --- Wearables Panel ---
+// --- Wearables ---
 
 const METRIC_LABELS: Record<string, string> = {
   resting_heart_rate: "Resting Heart Rate",
@@ -90,7 +98,6 @@ function MiniSparkline({ series }: { series: number[] }) {
   const h = 20;
   const w = 80;
   const step = w / (series.length - 1);
-
   const points = series
     .map((v, i) => `${i * step},${h - ((v - min) / range) * h}`)
     .join(" ");
@@ -108,26 +115,16 @@ function MiniSparkline({ series }: { series: number[] }) {
   );
 }
 
-function WearableMetricCard({
-  name,
-  metric,
-}: {
-  name: string;
-  metric: WearableMetric;
-}) {
+function WearableMetricCard({ name, metric }: { name: string; metric: WearableMetric }) {
   return (
     <div className="bg-neutral-900 border border-neutral-800 rounded p-3">
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <span className="text-xs text-neutral-400">
-          {METRIC_LABELS[name] ?? name}
-        </span>
+        <span className="text-xs text-neutral-400">{METRIC_LABELS[name] ?? name}</span>
         <TrendBadge trend={metric.trend} flag={metric.flag} />
       </div>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <span className="text-lg font-semibold text-neutral-100">
-            {metric.value}
-          </span>
+          <span className="text-lg font-semibold text-neutral-100">{metric.value}</span>
           <span className="text-xs text-neutral-500 ml-1">{metric.unit}</span>
         </div>
         <MiniSparkline series={metric.series} />
@@ -138,15 +135,11 @@ function WearableMetricCard({
 
 function WearablesView() {
   const wearables = useAppStore((s) => s.wearables);
-
   if (!wearables) {
     return (
       <div>
         <h3 className="text-lg font-semibold mb-3">Wearable Data</h3>
-        <p className="text-xs text-neutral-500">
-          No wearable data synced. Sync wearables on the upload screen for
-          day-to-day biometrics.
-        </p>
+        <p className="text-xs text-neutral-500">No wearable data synced.</p>
       </div>
     );
   }
@@ -154,17 +147,13 @@ function WearablesView() {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-1">Wearable Data</h3>
-      <p className="text-xs text-neutral-500 mb-1">
-        {wearables.source}
-      </p>
+      <p className="text-xs text-neutral-500 mb-1">{wearables.source}</p>
       <p className="text-xs text-neutral-600 mb-3">{wearables.sync_window}</p>
-
       <div className="space-y-2 mb-4">
         {Object.entries(wearables.metrics).map(([key, metric]) => (
           <WearableMetricCard key={key} name={key} metric={metric} />
         ))}
       </div>
-
       {wearables.insights.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-2">
@@ -186,52 +175,128 @@ function WearablesView() {
   );
 }
 
-// --- Digital Twins ---
+// --- Patient Detail (any galaxy point clicked in 3D) ---
+
+function PatientDetail() {
+  const selectedPoint = useAppStore((s) => s.selectedPoint);
+  const clusterNames = useAppStore((s) => s.clusterNames);
+
+  if (!selectedPoint) {
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Patient Detail</h3>
+        <p className="text-xs text-neutral-500">Click a patient dot in the 3D map.</p>
+      </div>
+    );
+  }
+
+  const cName = clusterNames[String(selectedPoint.cluster_id)] ?? "Unknown";
+
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-3">Patient Detail</h3>
+      <div className="bg-neutral-900 border border-neutral-800 rounded p-4 space-y-3">
+        <div>
+          <div className="text-sm font-medium text-neutral-100">{selectedPoint.label}</div>
+          <div className="text-xs text-neutral-500 mt-0.5">{selectedPoint.id}</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <ClusterBadge clusterId={selectedPoint.cluster_id} name={cName} />
+          <OutcomeBadge type={selectedPoint.outcome_type} />
+        </div>
+        <div className="text-xs text-neutral-400 leading-relaxed">
+          Coordinates: ({selectedPoint.x.toFixed(2)}, {selectedPoint.y.toFixed(2)}, {selectedPoint.z.toFixed(2)})
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- Digital Twins (with cluster badges + bidirectional selection) ---
+
+function ClusterBadge({ clusterId, name }: { clusterId: number; name: string }) {
+  return (
+    <span
+      className="text-[10px] px-1.5 py-0.5 rounded border font-medium"
+      style={{
+        color: CLUSTER_COLORS[clusterId] ?? "#999",
+        borderColor: CLUSTER_COLORS[clusterId] ?? "#999",
+        backgroundColor: `${CLUSTER_COLORS[clusterId] ?? "#999"}15`,
+      }}
+    >
+      {name}
+    </span>
+  );
+}
+
+function OutcomeBadge({ type }: { type: "positive" | "negative" }) {
+  return (
+    <span
+      className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+        type === "positive"
+          ? "text-green-400 bg-green-400/10"
+          : "text-red-400 bg-red-400/10"
+      }`}
+    >
+      {type === "positive" ? "Positive" : "Negative"}
+    </span>
+  );
+}
 
 function DigitalTwins() {
   const twins = useAppStore((s) => s.twins);
   const selectedTwin = useAppStore((s) => s.selectedTwin);
-  const setSelectedTwin = useAppStore((s) => s.setSelectedTwin);
-  const setSidePanelView = useAppStore((s) => s.setSidePanelView);
+  const selectTwin = useAppStore((s) => s.selectTwin);
+
+  if (twins.length === 0) {
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Digital Twins</h3>
+        <p className="text-xs text-neutral-500">Loading twins…</p>
+      </div>
+    );
+  }
 
   return (
     <div>
       <h3 className="text-lg font-semibold mb-3">Digital Twins</h3>
       <p className="text-xs text-neutral-500 mb-3">
-        5 nearest patients in the embedding space with known outcomes.
+        Click a twin to locate them in the 3D map. Ranked by embedding similarity.
       </p>
       <div className="space-y-2">
-        {twins.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => {
-              setSelectedTwin(selectedTwin?.id === t.id ? null : t);
-              if (selectedTwin?.id !== t.id) setSidePanelView("drill-down");
-            }}
-            className={`w-full text-left p-3 rounded border transition ${
-              selectedTwin?.id === t.id
-                ? "border-yellow-500 bg-yellow-500/10"
-                : "border-neutral-800 bg-neutral-900 hover:border-neutral-600"
-            }`}
-          >
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">{t.label}</span>
-              <span className="text-xs text-neutral-500">
-                {(t.similarity * 100).toFixed(0)}% match
-              </span>
-            </div>
-            {selectedTwin?.id === t.id && (
-              <div className="mt-2 pt-2 border-t border-neutral-700">
-                <p className="text-xs text-neutral-400 font-semibold mb-1">
-                  What Happened Next
-                </p>
-                <p className="text-xs text-neutral-300 leading-relaxed">
-                  {t.outcome}
-                </p>
+        {twins.map((t) => {
+          const isActive = selectedTwin?.id === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => selectTwin(isActive ? null : t)}
+              className={`w-full text-left p-3 rounded border transition ${
+                isActive
+                  ? "border-yellow-500 bg-yellow-500/10"
+                  : "border-neutral-800 bg-neutral-900 hover:border-neutral-600"
+              }`}
+            >
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-sm font-medium">{t.label}</span>
+                <span className="text-xs text-neutral-500">
+                  {(t.similarity * 100).toFixed(0)}% match
+                </span>
               </div>
-            )}
-          </button>
-        ))}
+              <div className="flex items-center gap-1.5 mb-2">
+                <ClusterBadge clusterId={t.cluster_id} name={t.cluster_name} />
+                <OutcomeBadge type={t.outcome_type} />
+              </div>
+              {/* Always show outcome summary */}
+              <p
+                className={`text-xs leading-relaxed ${
+                  isActive ? "text-neutral-200" : "text-neutral-500"
+                }`}
+              >
+                {t.outcome}
+              </p>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -286,24 +351,13 @@ function InterventionCards() {
 export default function SidePanel() {
   const sidePanelView = useAppStore((s) => s.sidePanelView);
   const setSidePanelView = useAppStore((s) => s.setSidePanelView);
-  const twins = useAppStore((s) => s.twins);
   const interventions = useAppStore((s) => s.interventions);
   const interventionsLoading = useAppStore((s) => s.interventionsLoading);
   const wearables = useAppStore((s) => s.wearables);
-  const setTwins = useAppStore((s) => s.setTwins);
   const setInterventions = useAppStore((s) => s.setInterventions);
   const setInterventionsLoading = useAppStore((s) => s.setInterventionsLoading);
   const setActive = useAppStore((s) => s.setActiveIntervention);
-
-  const handleLoadTwins = async () => {
-    if (twins.length > 0) {
-      setSidePanelView("twins");
-      return;
-    }
-    const data = await fetchNeighbors();
-    setTwins(data.twins);
-    setSidePanelView("twins");
-  };
+  const selectTwin = useAppStore((s) => s.selectTwin);
 
   const handleLoadInterventions = async () => {
     if (interventions.length > 0) {
@@ -319,13 +373,13 @@ export default function SidePanel() {
 
   return (
     <div className="h-full overflow-y-auto p-4 flex flex-col gap-4">
-      {/* Navigation tabs */}
       <div className="flex gap-1 flex-wrap">
         <TabButton
           active={sidePanelView === "stats"}
           onClick={() => {
             setSidePanelView("stats");
             setActive(null);
+            selectTwin(null);
           }}
           label="Stats"
         />
@@ -335,13 +389,17 @@ export default function SidePanel() {
             onClick={() => {
               setSidePanelView("wearables");
               setActive(null);
+              selectTwin(null);
             }}
             label="Wearables"
           />
         )}
         <TabButton
           active={sidePanelView === "twins" || sidePanelView === "drill-down"}
-          onClick={handleLoadTwins}
+          onClick={() => {
+            setSidePanelView("twins");
+            setActive(null);
+          }}
           label="Twins"
         />
         <TabButton
@@ -352,12 +410,10 @@ export default function SidePanel() {
         />
       </div>
 
-      {/* Panel content */}
       {sidePanelView === "stats" && <BaselineStats />}
       {sidePanelView === "wearables" && <WearablesView />}
-      {(sidePanelView === "twins" || sidePanelView === "drill-down") && (
-        <DigitalTwins />
-      )}
+      {sidePanelView === "patient-detail" && <PatientDetail />}
+      {(sidePanelView === "twins" || sidePanelView === "drill-down") && <DigitalTwins />}
       {sidePanelView === "interventions" && <InterventionCards />}
     </div>
   );

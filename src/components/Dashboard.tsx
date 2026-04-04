@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import SidePanel from "./SidePanel";
+import { useAppStore } from "@/lib/store";
+import { fetchNeighbors } from "@/lib/api";
 
 const GalaxyScene = dynamic(() => import("./GalaxyScene"), {
   ssr: false,
@@ -13,14 +16,20 @@ const GalaxyScene = dynamic(() => import("./GalaxyScene"), {
 });
 
 export default function Dashboard() {
+  const twins = useAppStore((s) => s.twins);
+  const setTwins = useAppStore((s) => s.setTwins);
+
+  useEffect(() => {
+    if (twins.length === 0) {
+      fetchNeighbors().then((data) => setTwins(data.twins));
+    }
+  }, [twins.length, setTwins]);
+
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* 3D Visualization — 70% */}
       <div className="w-[70%] h-full relative">
         <GalaxyScene />
       </div>
-
-      {/* Side Panel — 30% */}
       <div className="w-[30%] h-full border-l border-neutral-800 bg-black">
         <SidePanel />
       </div>

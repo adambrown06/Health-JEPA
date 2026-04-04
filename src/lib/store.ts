@@ -12,7 +12,7 @@ import type {
 
 export type AppPhase = "ingestion" | "loading" | "dashboard";
 
-export type SidePanelView = "stats" | "wearables" | "twins" | "drill-down" | "interventions";
+export type SidePanelView = "stats" | "wearables" | "twins" | "drill-down" | "interventions" | "patient-detail";
 
 interface AppState {
   phase: AppPhase;
@@ -30,6 +30,8 @@ interface AppState {
   userCoord: Coordinate | null;
   setUserCoord: (c: Coordinate) => void;
 
+  userClusterId: number;
+
   userCluster: string | null;
   setUserCluster: (name: string) => void;
 
@@ -37,7 +39,16 @@ interface AppState {
   setTwins: (t: DigitalTwin[]) => void;
 
   selectedTwin: DigitalTwin | null;
-  setSelectedTwin: (t: DigitalTwin | null) => void;
+  selectTwin: (t: DigitalTwin | null) => void;
+
+  focusedClusterId: number | null;
+  setFocusedClusterId: (id: number | null) => void;
+
+  selectedPatientId: string | null;
+  selectedPoint: GalaxyPoint | null;
+  selectPatientById: (id: string | null) => void;
+
+  clearSelection: () => void;
 
   interventions: Intervention[];
   setInterventions: (i: Intervention[]) => void;
@@ -58,7 +69,7 @@ interface AppState {
   setWearablesSynced: (b: boolean) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   phase: "ingestion",
   setPhase: (phase) => set({ phase }),
 
@@ -74,6 +85,8 @@ export const useAppStore = create<AppState>((set) => ({
   userCoord: null,
   setUserCoord: (userCoord) => set({ userCoord }),
 
+  userClusterId: 1,
+
   userCluster: null,
   setUserCluster: (userCluster) => set({ userCluster }),
 
@@ -81,7 +94,57 @@ export const useAppStore = create<AppState>((set) => ({
   setTwins: (twins) => set({ twins }),
 
   selectedTwin: null,
-  setSelectedTwin: (selectedTwin) => set({ selectedTwin }),
+  selectTwin: (twin) => {
+    set({
+      selectedTwin: twin,
+      selectedPatientId: twin?.id ?? null,
+      selectedPoint: null,
+      focusedClusterId: twin?.cluster_id ?? null,
+      sidePanelView: twin ? "twins" : get().sidePanelView,
+    });
+  },
+
+  focusedClusterId: null,
+  setFocusedClusterId: (focusedClusterId) =>
+    set({ focusedClusterId, selectedTwin: null, selectedPatientId: null, selectedPoint: null }),
+
+  selectedPatientId: null,
+  selectedPoint: null,
+  selectPatientById: (id) => {
+    if (!id) {
+      set({ selectedPatientId: null, selectedTwin: null, selectedPoint: null });
+      return;
+    }
+    const twins = get().twins;
+    const twinMatch = twins.find((t) => t.id === id);
+    if (twinMatch) {
+      set({
+        selectedPatientId: id,
+        selectedTwin: twinMatch,
+        selectedPoint: null,
+        focusedClusterId: twinMatch.cluster_id,
+        sidePanelView: "twins",
+      });
+      return;
+    }
+    const pts = get().galaxyPoints;
+    const ptMatch = pts.find((p) => p.id === id) ?? null;
+    set({
+      selectedPatientId: id,
+      selectedTwin: null,
+      selectedPoint: ptMatch,
+      focusedClusterId: ptMatch?.cluster_id ?? get().focusedClusterId,
+      sidePanelView: ptMatch ? "patient-detail" : get().sidePanelView,
+    });
+  },
+
+  clearSelection: () =>
+    set({
+      focusedClusterId: null,
+      selectedPatientId: null,
+      selectedTwin: null,
+      selectedPoint: null,
+    }),
 
   interventions: [],
   setInterventions: (interventions) => set({ interventions }),
@@ -91,7 +154,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   sidePanelView: "stats",
   setSidePanelView: (sidePanelView) =>
-    set({ sidePanelView, selectedTwin: null, activeIntervention: null }),
+    set({ sidePanelView, activeIntervention: null }),
 
   interventionsLoading: false,
   setInterventionsLoading: (interventionsLoading) =>

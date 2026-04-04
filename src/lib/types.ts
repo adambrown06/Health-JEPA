@@ -18,6 +18,8 @@ export interface IngestResponse {
 
 export interface GalaxyPoint {
   id: string;
+  label: string;
+  outcome_type: "positive" | "negative";
   x: number;
   y: number;
   z: number;
@@ -46,6 +48,9 @@ export interface DigitalTwin {
   id: string;
   label: string;
   similarity: number;
+  cluster_id: number;
+  cluster_name: string;
+  outcome_type: "positive" | "negative";
   coordinate: Coordinate;
   outcome: string;
 }
