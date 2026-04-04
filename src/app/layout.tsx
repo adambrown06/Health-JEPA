@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Universal Patient Embedding",
-  description: "JEPA-powered healthcare ML platform prototype",
+  title: "Cohort Compass — Your Health Universe",
+  description:
+    "Pointing you towards a healthier tomorrow. JEPA-powered healthcare ML prototype.",
 };
 
 export default function RootLayout({
@@ -25,9 +26,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-black text-neutral-100 font-sans">
+      <body
+        className="min-h-full bg-[#F4F6F8] text-[#5C6773] font-sans"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

@@ -4,27 +4,45 @@ import {
   useRef,
   useMemo,
   useEffect,
+  useLayoutEffect,
   useCallback,
   Component,
   type ReactNode,
 } from "react";
 import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, Html } from "@react-three/drei";
+import { OrbitControls, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { useAppStore } from "@/lib/store";
 import type { GalaxyPoint, DigitalTwin } from "@/lib/types";
 
+/** High-chroma palette so clusters read clearly on #F4F6F8 */
 const CLUSTER_COLORS: Record<number, string> = {
-  0: "#6b7280",
-  1: "#ef4444",
-  2: "#f59e0b",
-  3: "#3b82f6",
-  4: "#22c55e",
+  0: "#22d3ee", // cyan
+  1: "#ff4d6d", // hot rose / metabolic
+  2: "#ffb703", // amber
+  3: "#4cc9f0", // sky
+  4: "#06ffa5", // mint / active
 };
 
 const PRIMARY_CLUSTER = 1;
-const DOT_RADIUS = 0.18;
+/** Must match app shell / upload screen (#F4F6F8) */
+const BRAND_BG = "#f4f6f8";
+const DOT_RADIUS = 0.2;
 const DOT_SEGMENTS = 8;
+
+/** Per-vertex white so instanceColor is not multiplied by missing (black) vertex colors. */
+function sphereGeometryWithWhiteColors(
+  radius: number,
+  widthSegments: number,
+  heightSegments: number
+) {
+  const g = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+  const n = g.attributes.position.count;
+  const white = new Float32Array(n * 3);
+  white.fill(1);
+  g.setAttribute("color", new THREE.BufferAttribute(white, 3));
+  return g;
+}
 
 class SceneErrorBoundary extends Component<
   { children: ReactNode },
@@ -37,10 +55,10 @@ class SceneErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-full bg-neutral-950 text-neutral-400 p-8 text-center">
+        <div className="flex items-center justify-center h-full bg-[#F4F6F8] text-[#5C6773] p-8 text-center">
           <div>
-            <p className="text-sm font-medium mb-2">3D scene encountered an error</p>
-            <p className="text-xs text-neutral-600">{this.state.error}</p>
+            <p className="text-sm font-medium mb-2 text-[#0B3C8C]">3D scene encountered an error</p>
+            <p className="text-xs text-[#6B7280]">{this.state.error}</p>
           </div>
         </div>
       );
@@ -57,8 +75,12 @@ function PatientDots() {
   const selectById = useAppStore((s) => s.selectPatientById);
   const meshRef = useRef<THREE.InstancedMesh>(null!);
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geometry = useMemo(
+    () => sphereGeometryWithWhiteColors(DOT_RADIUS, DOT_SEGMENTS, DOT_SEGMENTS),
+    []
+  );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!meshRef.current || galaxyPoints.length === 0) return;
 
     const color = new THREE.Color();
@@ -66,20 +88,23 @@ function PatientDots() {
 
     for (let i = 0; i < galaxyPoints.length; i++) {
       const pt = galaxyPoints[i];
+      const cid = Number(pt.cluster_id);
 
       dummy.position.set(pt.x, pt.y, pt.z);
       dummy.scale.setScalar(1);
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
 
-      color.set(CLUSTER_COLORS[pt.cluster_id] ?? "#6b7280");
+      color.set(CLUSTER_COLORS[cid] ?? "#a5b4fc");
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
-    meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+    const attr = new THREE.InstancedBufferAttribute(colors, 3);
+    attr.needsUpdate = true;
+    meshRef.current.instanceColor = attr;
   }, [galaxyPoints, dummy]);
 
   // Pulse the selected instance
@@ -117,11 +142,15 @@ function PatientDots() {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[undefined, undefined, galaxyPoints.length]}
+      args={[geometry, undefined, galaxyPoints.length]}
       onClick={handleClick}
     >
-      <sphereGeometry args={[DOT_RADIUS, DOT_SEGMENTS, DOT_SEGMENTS]} />
-      <meshStandardMaterial toneMapped={false} />
+      <meshStandardMaterial
+        vertexColors
+        roughness={0.22}
+        metalness={0.06}
+        toneMapped
+      />
     </instancedMesh>
   );
 }
@@ -134,8 +163,12 @@ function TwinDots() {
   const selectById = useAppStore((s) => s.selectPatientById);
   const meshRef = useRef<THREE.InstancedMesh>(null!);
   const dummy = useMemo(() => new THREE.Object3D(), []);
+  const geometry = useMemo(
+    () => sphereGeometryWithWhiteColors(DOT_RADIUS, 12, 12),
+    []
+  );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!meshRef.current || twins.length === 0) return;
 
     const color = new THREE.Color();
@@ -148,14 +181,16 @@ function TwinDots() {
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
 
-      color.set(t.outcome_type === "positive" ? "#22c55e" : "#ef4444");
+      color.set(t.outcome_type === "positive" ? "#34f5c5" : "#ff5c8a");
       colors[i * 3] = color.r;
       colors[i * 3 + 1] = color.g;
       colors[i * 3 + 2] = color.b;
     }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
-    meshRef.current.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+    const attr = new THREE.InstancedBufferAttribute(colors, 3);
+    attr.needsUpdate = true;
+    meshRef.current.instanceColor = attr;
   }, [twins, dummy]);
 
   useFrame((state) => {
@@ -191,11 +226,16 @@ function TwinDots() {
   return (
     <instancedMesh
       ref={meshRef}
-      args={[undefined, undefined, twins.length]}
+      args={[geometry, undefined, twins.length]}
       onClick={handleClick}
     >
-      <sphereGeometry args={[DOT_RADIUS, 12, 12]} />
-      <meshStandardMaterial emissiveIntensity={0.5} toneMapped={false} />
+      <meshStandardMaterial
+        vertexColors
+        emissiveIntensity={0.45}
+        roughness={0.22}
+        metalness={0.05}
+        toneMapped
+      />
     </instancedMesh>
   );
 }
@@ -214,12 +254,12 @@ function SelectionTooltip() {
     const c = selectedTwin.coordinate;
     return (
       <Html position={[c.x, c.y + 0.7, c.z]} center>
-        <div className="bg-black/90 text-white text-xs px-2.5 py-1.5 rounded pointer-events-none select-none border border-neutral-600 max-w-[220px]">
+        <div className="bg-[#F4F6F8] text-[#0B3C8C] text-xs px-2.5 py-1.5 rounded-lg pointer-events-none select-none border border-[#D9DEE3] shadow-md max-w-[220px]">
           <div className="font-semibold">{selectedTwin.label}</div>
-          <div className="text-[10px] text-neutral-400 mt-0.5">
+          <div className="text-[10px] text-[#6B7280] mt-0.5">
             {(selectedTwin.similarity * 100).toFixed(0)}% match · {selectedTwin.cluster_name}
           </div>
-          <div className={`text-[10px] mt-0.5 ${selectedTwin.outcome_type === "positive" ? "text-green-400" : "text-red-400"}`}>
+          <div className={`text-[10px] mt-0.5 font-medium ${selectedTwin.outcome_type === "positive" ? "text-emerald-700" : "text-red-700"}`}>
             {selectedTwin.outcome_type === "positive" ? "Positive" : "Negative"} outcome
           </div>
         </div>
@@ -231,10 +271,10 @@ function SelectionTooltip() {
     const cName = clusterNames[String(selectedPoint.cluster_id)] ?? "Unknown";
     return (
       <Html position={[selectedPoint.x, selectedPoint.y + 0.6, selectedPoint.z]} center>
-        <div className="bg-black/90 text-white text-xs px-2.5 py-1.5 rounded pointer-events-none select-none border border-neutral-600 max-w-[200px]">
+        <div className="bg-[#F4F6F8] text-[#0B3C8C] text-xs px-2.5 py-1.5 rounded-lg pointer-events-none select-none border border-[#D9DEE3] shadow-md max-w-[200px]">
           <div className="font-semibold">{selectedPoint.label}</div>
-          <div className="text-[10px] text-neutral-400 mt-0.5">{cName}</div>
-          <div className={`text-[10px] mt-0.5 ${selectedPoint.outcome_type === "positive" ? "text-green-400" : "text-red-400"}`}>
+          <div className="text-[10px] text-[#6B7280] mt-0.5">{cName}</div>
+          <div className={`text-[10px] mt-0.5 font-medium ${selectedPoint.outcome_type === "positive" ? "text-emerald-700" : "text-red-700"}`}>
             {selectedPoint.outcome_type === "positive" ? "Positive" : "Negative"} outcome
           </div>
         </div>
@@ -279,11 +319,11 @@ function IslandLabel({
           className={`font-semibold uppercase tracking-widest ${
             isPrimary ? "text-sm" : "text-[10px]"
           }`}
-          style={{ color: CLUSTER_COLORS[clusterId] ?? "#999" }}
+          style={{ color: CLUSTER_COLORS[clusterId] ?? "#a5b4fc" }}
         >
           {name}
         </div>
-        <div className="text-[9px] text-neutral-500 mt-0.5">
+        <div className="text-[9px] text-[#6B7280] mt-0.5">
           {isPrimary ? "Your primary cluster" : `${count} patients`}
         </div>
       </button>
@@ -351,52 +391,32 @@ function CameraController() {
 
 function TrajectoryLine() {
   const intervention = useAppStore((s) => s.activeIntervention);
-
-  const geometry = useMemo(() => {
-    if (!intervention) return null;
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array([
-      0, 0, 0,
-      intervention.target_coordinate.x,
-      intervention.target_coordinate.y,
-      intervention.target_coordinate.z,
-    ]);
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return geo;
-  }, [intervention]);
-
-  if (!intervention || !geometry) return null;
+  if (!intervention) return null;
   const end = intervention.target_coordinate;
+  const start: [number, number, number] = [0, 0, 0];
+  const endPt: [number, number, number] = [end.x, end.y, end.z];
 
   return (
     <group>
-      <line geometry={geometry}>
-        <lineDashedMaterial color="#22d3ee" dashSize={0.4} gapSize={0.2} linewidth={1} />
-      </line>
+      <Line
+        points={[start, endPt]}
+        color="#2EC4C7"
+        lineWidth={2}
+        dashed
+        dashSize={0.4}
+        gapSize={0.2}
+      />
       <mesh position={[end.x, end.y, end.z]}>
         <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial color="#22d3ee" emissive="#22d3ee" emissiveIntensity={0.8} transparent opacity={0.9} />
+        <meshStandardMaterial color="#1FA3B3" emissive="#0E7C91" emissiveIntensity={0.5} transparent opacity={0.95} />
       </mesh>
       <Html position={[end.x, end.y + 0.6, end.z]} center>
-        <div className="bg-cyan-950/90 text-cyan-300 text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none select-none border border-cyan-800">
+        <div className="bg-[#0E7C91]/95 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none select-none border border-[#2EC4C7]/50">
           Projected Position
         </div>
       </Html>
     </group>
   );
-}
-
-function DashedLineUpdater() {
-  const intervention = useAppStore((s) => s.activeIntervention);
-  const { scene } = useThree();
-  useEffect(() => {
-    scene.traverse((obj) => {
-      if ((obj as THREE.Line).isLine && (obj as THREE.Line).computeLineDistances) {
-        (obj as THREE.Line).computeLineDistances();
-      }
-    });
-  }, [intervention, scene]);
-  return null;
 }
 
 // --- Main scene ---
@@ -424,9 +444,11 @@ function SceneContents() {
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <pointLight position={[15, 20, 15]} intensity={0.5} />
-      <pointLight position={[-15, 15, -15]} intensity={0.3} />
+      <hemisphereLight args={["#ffffff", "#c8d0e0", 0.6]} />
+      <ambientLight intensity={0.68} />
+      <directionalLight position={[12, 18, 10]} intensity={1.05} />
+      <pointLight position={[15, 20, 15]} intensity={0.55} />
+      <pointLight position={[-15, 15, -15]} intensity={0.38} />
 
       {/* Click on empty space (canvas miss) to deselect */}
       <mesh visible={false} onClick={() => clearSelection()}>
@@ -450,7 +472,6 @@ function SceneContents() {
       ))}
 
       <TrajectoryLine />
-      <DashedLineUpdater />
       <CameraController />
       <OrbitControls enableDamping dampingFactor={0.1} />
     </>
@@ -463,7 +484,11 @@ export default function GalaxyScene() {
       <Canvas
         camera={{ position: [0, 28, 35], fov: 50, near: 0.1, far: 400 }}
         gl={{ antialias: true, alpha: false }}
-        onCreated={({ gl }) => gl.setClearColor("#0a0a0a")}
+        onCreated={({ gl, scene }) => {
+          const col = new THREE.Color(BRAND_BG);
+          gl.setClearColor(col);
+          scene.background = col;
+        }}
       >
         <SceneContents />
       </Canvas>

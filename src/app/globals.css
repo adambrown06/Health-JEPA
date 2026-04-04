@@ -3,6 +3,15 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-brand-primary: #0b3c8c;
+  --color-brand-teal-light: #2ec4c7;
+  --color-brand-teal-mid: #1fa3b3;
+  --color-brand-teal-deep: #0e7c91;
+  --color-brand-silver: #d9dee3;
+  --color-brand-gray-mid: #9aa3ad;
+  --color-brand-gray-dark: #5c6773;
+  --color-brand-bg: #f4f6f8;
+  --color-brand-muted: #6b7280;
 }
 
 * {
@@ -10,6 +19,42 @@
 }
 
 body {
-  background: #000;
-  color: #e5e5e5;
+  background: #f4f6f8;
+  color: var(--color-brand-gray-dark);
+}
+
+/* Single source of truth for shell + 3D canvas (must match exactly) */
+html,
+body {
+  background-color: #f4f6f8;
+}
+
+/* Logo PNGs often include a white matte; multiply blends it into #F4F6F8 */
+.logo-on-brand {
+  mix-blend-mode: multiply;
+}
+
+/* Teal gradient text (brand “Compass”) */
+.text-brand-compass {
+  background: linear-gradient(
+    135deg,
+    #2ec4c7 0%,
+    #1fa3b3 45%,
+    #0e7c91 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Decorative tagline rule */
+.tagline-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d9dee3 15%,
+    #d9dee3 85%,
+    transparent
+  );
 }

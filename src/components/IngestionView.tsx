@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useAppStore } from "@/lib/store";
 import {
   ingestFile,
@@ -35,7 +36,6 @@ export default function IngestionView() {
     "Finalizing twin…",
   ];
 
-  // --- Upload MyChart ---
   const handleUploadChart = async () => {
     setStage("uploading");
     try {
@@ -49,7 +49,6 @@ export default function IngestionView() {
     }
   };
 
-  // --- Sync Wearables ---
   const handleSyncWearables = async () => {
     setSyncingWearables(true);
     try {
@@ -63,7 +62,6 @@ export default function IngestionView() {
     }
   };
 
-  // --- Generate Digital Twin ---
   const handleGenerate = async () => {
     setStage("generating");
     try {
@@ -98,39 +96,49 @@ export default function IngestionView() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-8 max-w-xl mx-auto">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Universal Patient Embedding
-        </h1>
-        <p className="text-neutral-400 text-sm">
-          Upload your clinical records and sync wearables to generate your
-          Health Digital Twin in the All of Us cohort.
+    <div className="flex flex-col items-center justify-center min-h-dvh h-dvh max-h-dvh overflow-y-auto overflow-x-hidden gap-3 px-4 py-3 max-w-xl mx-auto w-full bg-[#F4F6F8] [scrollbar-gutter:stable]">
+      {/* Brand: blend removes white matte from PNG */}
+      <div className="text-center w-full shrink-0">
+        <div className="mb-0 flex justify-center">
+          <div className="rounded-xl bg-[#F4F6F8] p-1 inline-flex">
+            <Image
+              src="/brand-compass-mark.png"
+              alt="Cohort Compass — Pointing you towards a healthier tomorrow."
+              width={640}
+              height={320}
+              className="logo-on-brand w-[min(100%,560px,96vw)] h-auto max-h-[min(340px,40vh)] object-contain"
+              priority
+            />
+          </div>
+        </div>
+        <p className="-mt-1.5 text-xl sm:text-2xl font-bold text-[#0B3C8C] tracking-tight">
+          Your Health Universe
         </p>
       </div>
 
-      {/* Step 1: Upload MyChart */}
-      <div className="w-full">
+      {/* Step 1 */}
+      <div className="w-full min-h-0 shrink">
         <SectionLabel step={1} label="Clinical Records" />
-        <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-950">
-          <div className="flex items-center gap-3 mb-3">
+        <div className="border border-[#D9DEE3] rounded-xl p-3 bg-white shadow-sm">
+          <div className="flex items-center gap-3 mb-2">
             <FileIcon />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-neutral-200 truncate">mychart_export.pdf</p>
-              <p className="text-xs text-neutral-600">4.2 KB — MyChart clinical history</p>
+              <p className="text-sm text-[#0B3C8C] font-medium truncate">
+                mychart_export.pdf
+              </p>
+              <p className="text-xs text-[#9AA3AD]">4.2 KB — MyChart clinical history</p>
             </div>
             {chartUploaded && <CheckBadge />}
           </div>
           <button
             onClick={handleUploadChart}
             disabled={stage !== "initial"}
-            className={`w-full py-2.5 rounded text-sm font-medium transition ${
+            className={`w-full py-2 rounded-lg text-sm font-semibold transition ${
               chartUploaded
-                ? "bg-green-900/30 text-green-400 border border-green-800 cursor-default"
+                ? "bg-[#E8F7F8] text-[#0E7C91] border border-[#2EC4C7]/40 cursor-default"
                 : stage === "uploading"
-                ? "bg-neutral-800 text-neutral-500 cursor-wait"
-                : "bg-white text-black hover:bg-neutral-200"
+                ? "bg-[#D9DEE3] text-[#9AA3AD] cursor-wait"
+                : "bg-[#0B3C8C] text-white hover:bg-[#09306f] shadow-sm"
             }`}
           >
             {chartUploaded
@@ -142,30 +150,28 @@ export default function IngestionView() {
         </div>
       </div>
 
-      {/* Step 2: Sync Wearables */}
-      <div className="w-full">
+      {/* Step 2 */}
+      <div className="w-full min-h-0 shrink">
         <SectionLabel step={2} label="Wearable Data" optional />
-        <div className="border border-neutral-800 rounded-lg p-4 bg-neutral-950">
-          <p className="text-xs text-neutral-500 mb-3 leading-relaxed">
-            For a more accurate digital twin, sync your wearables to include
-            day-to-day biometric data — heart rate variability, sleep quality,
-            activity levels, and more.
+        <div className="border border-[#D9DEE3] rounded-xl p-3 bg-white shadow-sm">
+          <p className="text-[11px] text-[#6B7280] mb-2 leading-snug">
+            Optional: sync wearables for HRV, sleep, and activity in your twin.
           </p>
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             <WatchIcon />
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-[#5C6773]">
               Apple Watch, Oura Ring, Fitbit, Garmin, Whoop
             </span>
           </div>
           <button
             onClick={handleSyncWearables}
             disabled={syncingWearables || wearablesSynced}
-            className={`w-full py-2.5 rounded text-sm font-medium transition ${
+            className={`w-full py-2 rounded-lg text-sm font-semibold transition ${
               wearablesSynced
-                ? "bg-green-900/30 text-green-400 border border-green-800 cursor-default"
+                ? "bg-[#E8F7F8] text-[#0E7C91] border border-[#2EC4C7]/40 cursor-default"
                 : syncingWearables
-                ? "bg-neutral-800 text-neutral-500 cursor-wait"
-                : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700 border border-neutral-700"
+                ? "bg-[#D9DEE3] text-[#9AA3AD] cursor-wait"
+                : "border-2 border-[#9AA3AD] text-[#0B3C8C] bg-white hover:bg-[#F4F6F8]"
             }`}
           >
             {wearablesSynced
@@ -177,39 +183,38 @@ export default function IngestionView() {
         </div>
       </div>
 
-      {/* Step 3: Generate Digital Twin (appears after chart is uploaded) */}
       {(chartUploaded || stage === "generating") && (
-        <div className="w-full text-center">
-          <div className="border-t border-neutral-800 pt-6 mt-2">
+        <div className="w-full text-center shrink-0 min-h-0">
+          <div className="border-t border-[#D9DEE3] pt-3 mt-1 w-full">
             {stage !== "generating" ? (
               <>
-                <p className="text-neutral-500 text-xs mb-4">
+                <p className="text-[#6B7280] text-[11px] mb-2 leading-tight">
                   {wearablesSynced
-                    ? "Clinical records + wearables ready. Full-fidelity twin available."
-                    : "Clinical records ready. Sync wearables above for higher accuracy."}
+                    ? "Records + wearables ready."
+                    : "Records ready — optional wearables above."}
                 </p>
                 <button
                   onClick={handleGenerate}
-                  className="w-full py-4 rounded-lg text-lg font-bold bg-white text-black hover:bg-neutral-200 transition"
+                  className="w-full py-3 rounded-xl text-base font-bold text-white shadow-md transition hover:opacity-95 bg-gradient-to-r from-[#2EC4C7] via-[#1FA3B3] to-[#0E7C91]"
                 >
                   Generate Health Digital Twin
                 </button>
               </>
             ) : (
-              <div className="flex flex-col items-center gap-3">
-                <p className="text-lg font-semibold text-neutral-200">
+              <div className="flex flex-col items-center gap-1.5 max-h-[38vh] overflow-y-auto">
+                <p className="text-base font-semibold text-[#0B3C8C] shrink-0">
                   Generating your Digital Twin…
                 </p>
-                <div className="w-full flex flex-col items-start gap-1.5 mt-2">
+                <div className="w-full flex flex-col items-start gap-0.5 text-left max-w-sm mx-auto text-[11px]">
                   {GEN_STEPS.map((label, i) => (
                     <div
                       key={i}
-                      className={`text-xs transition-all duration-300 ${
+                      className={`transition-all duration-300 ${
                         i < genStep
-                          ? "text-green-500"
+                          ? "text-[#0E7C91]"
                           : i === genStep
-                          ? "text-neutral-300 animate-pulse"
-                          : "text-neutral-700"
+                          ? "text-[#5C6773] animate-pulse"
+                          : "text-[#D9DEE3]"
                       }`}
                     >
                       {i < genStep ? "✓" : i === genStep ? "›" : "·"} {label}
@@ -225,8 +230,6 @@ export default function IngestionView() {
   );
 }
 
-// --- Small helper components ---
-
 function SectionLabel({
   step,
   label,
@@ -237,11 +240,11 @@ function SectionLabel({
   optional?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2 mb-2">
-      <span className="text-xs text-neutral-600 font-mono">{step}.</span>
-      <span className="text-sm font-medium text-neutral-300">{label}</span>
+    <div className="flex items-center gap-2 mb-1">
+      <span className="text-xs text-[#9AA3AD] font-mono">{step}.</span>
+      <span className="text-sm font-semibold text-[#0B3C8C]">{label}</span>
       {optional && (
-        <span className="text-[10px] text-neutral-600 uppercase tracking-wider">
+        <span className="text-[10px] text-[#9AA3AD] uppercase tracking-wider">
           optional
         </span>
       )}
@@ -252,7 +255,7 @@ function SectionLabel({
 function FileIcon() {
   return (
     <svg
-      className="w-8 h-8 text-neutral-600 shrink-0"
+      className="w-8 h-8 text-[#9AA3AD] shrink-0"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -276,7 +279,7 @@ function FileIcon() {
 function WatchIcon() {
   return (
     <svg
-      className="w-4 h-4 text-neutral-600 shrink-0"
+      className="w-4 h-4 text-[#1FA3B3] shrink-0"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -302,9 +305,9 @@ function WatchIcon() {
 
 function CheckBadge() {
   return (
-    <div className="w-6 h-6 rounded-full bg-green-900/50 border border-green-700 flex items-center justify-center shrink-0">
+    <div className="w-6 h-6 rounded-full bg-[#E8F7F8] border border-[#2EC4C7]/50 flex items-center justify-center shrink-0">
       <svg
-        className="w-3.5 h-3.5 text-green-400"
+        className="w-3.5 h-3.5 text-[#0E7C91]"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
