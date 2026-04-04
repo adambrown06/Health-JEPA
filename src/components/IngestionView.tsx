@@ -36,7 +36,13 @@ export default function IngestionView() {
   const [syncingWearables, setSyncingWearables] = useState(false);
   const [genStep, setGenStep] = useState(-1);
 
-  const currentStep = chartUploaded ? (stage === "generating" ? 3 : 2) : 1;
+  const currentStep = !chartUploaded
+    ? 1
+    : stage === "generating"
+      ? 3
+      : wearablesSynced
+        ? 3
+        : 2;
 
   const handleUploadChart = async () => {
     setStage("uploading");
@@ -98,32 +104,32 @@ export default function IngestionView() {
   };
 
   return (
-    <div className="landing-bg flex flex-col items-center min-h-dvh h-dvh max-h-dvh overflow-y-auto overflow-x-hidden px-5 py-6 [scrollbar-gutter:stable]">
-      <div className="flex flex-col items-center w-full max-w-md mx-auto flex-1 justify-center gap-5">
+    <div className="landing-bg flex flex-col items-center min-h-dvh h-dvh max-h-dvh overflow-hidden overflow-x-hidden px-4 py-3">
+      <div className="flex flex-col items-center w-full max-w-md mx-auto flex-1 min-h-0 justify-center gap-2 sm:gap-3">
 
         {/* ── Hero ── */}
-        <div className="text-center w-full animate-fade-up">
-          <div className="flex justify-center mb-4">
+        <div className="text-center w-full animate-fade-up shrink-0">
+          <div className="flex justify-center mb-2">
             <Image
               src="/compass-logo.png"
               alt=""
               width={320}
               height={320}
-              className="w-36 h-36 sm:w-44 sm:h-44 object-contain animate-float"
+              className="w-24 h-24 sm:w-28 sm:h-28 object-contain animate-float"
               priority
             />
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
             <span className="text-[#0B3C8C]">Cohort </span>
             <span className="text-brand-compass">Compass</span>
           </h1>
-          <p className="mt-1.5 text-sm sm:text-base text-[#6B7280] italic tracking-wide">
+          <p className="mt-1 text-xs sm:text-sm text-[#6B7280] italic tracking-wide">
             Pointing you towards a healthier tomorrow.
           </p>
         </div>
 
         {/* ── Progress indicator ── */}
-        <div className="flex items-center gap-0 w-full max-w-[220px] animate-fade-up" style={{ animationDelay: "0.1s" }}>
+        <div className="flex items-center gap-0 w-full max-w-[220px] animate-fade-up shrink-0" style={{ animationDelay: "0.1s" }}>
           <StepDot num={1} active={currentStep >= 1} current={currentStep === 1} />
           <StepLine filled={currentStep >= 2} />
           <StepDot num={2} active={currentStep >= 2} current={currentStep === 2} />
@@ -139,8 +145,8 @@ export default function IngestionView() {
             <div className={`card-glass rounded-2xl p-4 shadow-sm transition-all duration-300 ${
               chartUploaded ? "ring-2 ring-[#2EC4C7]/30" : ""
             }`}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0B3C8C] to-[#1FA3B3] flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0B3C8C] to-[#1FA3B3] flex items-center justify-center shrink-0">
                   <FileIcon />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -150,7 +156,7 @@ export default function IngestionView() {
                 {chartUploaded && <CheckBadge />}
               </div>
 
-              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-[#F4F6F8]/80 mb-3">
+              <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg bg-[#F4F6F8]/80 mb-2">
                 <svg className="w-4 h-4 text-[#9AA3AD] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v13a2 2 0 002 2z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 3v4a2 2 0 002 2h4" />
@@ -164,7 +170,7 @@ export default function IngestionView() {
               <button
                 onClick={handleUploadChart}
                 disabled={stage !== "initial"}
-                className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`w-full py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   chartUploaded
                     ? "bg-[#E8F7F8] text-[#0E7C91] border border-[#2EC4C7]/40 cursor-default"
                     : stage === "uploading"
@@ -183,11 +189,11 @@ export default function IngestionView() {
 
           {/* Card 2: Wearables */}
           <div className="animate-fade-up" style={{ animationDelay: "0.25s" }}>
-            <div className={`card-glass rounded-2xl p-4 shadow-sm transition-all duration-300 ${
+            <div className={`card-glass rounded-2xl p-3 shadow-sm transition-all duration-300 ${
               wearablesSynced ? "ring-2 ring-[#2EC4C7]/30" : ""
             }`}>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1FA3B3] to-[#2EC4C7] flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1FA3B3] to-[#2EC4C7] flex items-center justify-center shrink-0">
                   <WatchIcon />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -202,7 +208,7 @@ export default function IngestionView() {
                 {wearablesSynced && <CheckBadge />}
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap px-3 py-2 rounded-lg bg-[#F4F6F8]/80 mb-3">
+              <div className="flex items-center gap-1.5 flex-wrap px-2 py-1.5 rounded-lg bg-[#F4F6F8]/80 mb-2">
                 {["Apple Watch", "Oura Ring", "Fitbit", "Garmin", "Whoop"].map((d) => (
                   <span
                     key={d}
@@ -216,7 +222,7 @@ export default function IngestionView() {
               <button
                 onClick={handleSyncWearables}
                 disabled={syncingWearables || wearablesSynced}
-                className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                className={`w-full py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   wearablesSynced
                     ? "bg-[#E8F7F8] text-[#0E7C91] border border-[#2EC4C7]/40 cursor-default"
                     : syncingWearables
@@ -236,24 +242,24 @@ export default function IngestionView() {
 
         {/* ── Generate CTA ── */}
         {(chartUploaded || stage === "generating") && (
-          <div className="w-full animate-fade-up" style={{ animationDelay: "0.1s" }}>
+          <div className="w-full animate-fade-up shrink-0" style={{ animationDelay: "0.1s" }}>
             {stage !== "generating" ? (
               <div className="text-center">
-                <p className="text-[#6B7280] text-xs mb-3">
+                <p className="text-[#6B7280] text-[11px] mb-2">
                   {wearablesSynced
                     ? "Clinical records & wearable data ready."
                     : "Clinical records ready — wearable sync is optional."}
                 </p>
                 <button
                   onClick={handleGenerate}
-                  className="w-full py-3.5 rounded-2xl text-base font-bold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 btn-shimmer"
+                  className="w-full py-2.5 rounded-2xl text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5 btn-shimmer"
                 >
                   Generate Health Digital Twin
                 </button>
               </div>
             ) : (
-              <div className="card-glass rounded-2xl p-5 text-center">
-                <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="card-glass rounded-2xl p-3 text-center">
+                <div className="relative w-12 h-12 mx-auto mb-2">
                   <div className="absolute inset-0 rounded-full border-2 border-[#D9DEE3]" />
                   <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#2EC4C7] animate-spin-slow" />
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -266,10 +272,10 @@ export default function IngestionView() {
                     />
                   </div>
                 </div>
-                <p className="text-base font-semibold text-[#0B3C8C] mb-3">
+                <p className="text-sm font-semibold text-[#0B3C8C] mb-2">
                   Generating your Digital Twin…
                 </p>
-                <div className="flex flex-col items-start gap-1.5 text-left max-w-xs mx-auto">
+                <div className="flex flex-col items-start gap-1 text-left max-w-xs mx-auto">
                   {GEN_STEPS.map((label, i) => (
                     <div
                       key={i}
@@ -304,7 +310,7 @@ export default function IngestionView() {
         )}
 
         {/* ── Trust footer ── */}
-        <div className="flex items-center justify-center gap-4 pt-1 animate-fade-up" style={{ animationDelay: "0.35s" }}>
+        <div className="flex items-center justify-center gap-3 pt-0.5 shrink-0 animate-fade-up" style={{ animationDelay: "0.35s" }}>
           <TrustBadge icon={<LockIcon />} label="End-to-end encrypted" />
           <TrustBadge icon={<ShieldIcon />} label="HIPAA compliant" />
         </div>

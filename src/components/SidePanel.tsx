@@ -233,89 +233,17 @@ function OutcomeBadge({ type }: { type: "positive" | "negative" }) {
   );
 }
 
-function DigitalTwins() {
-  const twins = useAppStore((s) => s.twins);
-  const selectedTwin = useAppStore((s) => s.selectedTwin);
-  const selectTwin = useAppStore((s) => s.selectTwin);
-
-  if (twins.length === 0) {
-    return (
-      <div>
-        <h3 className="text-lg font-semibold mb-3 text-[#0B3C8C]">Digital Twins</h3>
-        <p className="text-xs text-[#6B7280]">Loading twins…</p>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3 text-[#0B3C8C]">Digital Twins</h3>
-      <p className="text-xs text-[#6B7280] mb-3">
-        Click a twin to locate them in the 3D map. Ranked by embedding similarity.
-      </p>
-      <div className="space-y-2">
-        {twins.map((t) => {
-          const isActive = selectedTwin?.id === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => selectTwin(isActive ? null : t)}
-              className={`w-full text-left p-3 rounded-lg border transition shadow-sm ${
-                isActive
-                  ? "border-[#0B3C8C] bg-[#E8EEF8]"
-                  : "border-[#D9DEE3] bg-white hover:border-[#9AA3AD]"
-              }`}
-            >
-              <div className="flex justify-between items-center mb-1.5">
-                <span className="text-sm font-medium text-[#0B3C8C]">{t.label}</span>
-                <span className="text-xs text-[#9AA3AD]">
-                  {(t.similarity * 100).toFixed(0)}% match
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <ClusterBadge clusterId={t.cluster_id} name={t.cluster_name} />
-                <OutcomeBadge type={t.outcome_type} />
-              </div>
-              <p
-                className={`text-xs leading-relaxed ${
-                  isActive ? "text-[#5C6773]" : "text-[#6B7280]"
-                }`}
-              >
-                {t.outcome}
-              </p>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function InterventionCards() {
   const interventions = useAppStore((s) => s.interventions);
-  const active = useAppStore((s) => s.activeIntervention);
-  const setActive = useAppStore((s) => s.setActiveIntervention);
 
   return (
     <div>
       <h3 className="text-lg font-semibold mb-3 text-[#0B3C8C]">Recommended Interventions</h3>
-      <p className="text-xs text-[#6B7280] mb-3">
-        Click a card to visualize the projected trajectory in the 3D map.
-      </p>
       <div className="space-y-2">
         {interventions.map((iv) => (
-          <button
+          <div
             key={iv.id}
-            onClick={() => setActive(active?.id === iv.id ? null : iv)}
-            onMouseEnter={() => setActive(iv)}
-            onMouseLeave={() => {
-              if (active?.id === iv.id) setActive(null);
-            }}
-            className={`w-full text-left p-3 rounded-lg border transition shadow-sm ${
-              active?.id === iv.id
-                ? "border-[#1FA3B3] bg-[#E8F7F8]"
-                : "border-[#D9DEE3] bg-white hover:border-[#9AA3AD]"
-            }`}
+            className="w-full text-left p-3 rounded-lg border border-[#D9DEE3] bg-white shadow-sm"
           >
             <div className="flex justify-between items-center mb-1">
               <span className="text-sm font-medium text-[#0B3C8C]">{iv.title}</span>
@@ -324,7 +252,7 @@ function InterventionCards() {
               </span>
             </div>
             <p className="text-xs text-[#6B7280] leading-relaxed">{iv.description}</p>
-          </button>
+          </div>
         ))}
       </div>
     </div>
@@ -339,7 +267,6 @@ export default function SidePanel() {
   const wearables = useAppStore((s) => s.wearables);
   const setInterventions = useAppStore((s) => s.setInterventions);
   const setInterventionsLoading = useAppStore((s) => s.setInterventionsLoading);
-  const setActive = useAppStore((s) => s.setActiveIntervention);
   const selectTwin = useAppStore((s) => s.selectTwin);
 
   const handleLoadInterventions = async () => {
@@ -361,7 +288,6 @@ export default function SidePanel() {
           active={sidePanelView === "stats"}
           onClick={() => {
             setSidePanelView("stats");
-            setActive(null);
             selectTwin(null);
           }}
           label="Stats"
@@ -371,20 +297,11 @@ export default function SidePanel() {
             active={sidePanelView === "wearables"}
             onClick={() => {
               setSidePanelView("wearables");
-              setActive(null);
               selectTwin(null);
             }}
             label="Wearables"
           />
         )}
-        <TabButton
-          active={sidePanelView === "twins" || sidePanelView === "drill-down"}
-          onClick={() => {
-            setSidePanelView("twins");
-            setActive(null);
-          }}
-          label="Twins"
-        />
         <TabButton
           active={sidePanelView === "interventions"}
           onClick={handleLoadInterventions}
@@ -396,7 +313,6 @@ export default function SidePanel() {
       {sidePanelView === "stats" && <BaselineStats />}
       {sidePanelView === "wearables" && <WearablesView />}
       {sidePanelView === "patient-detail" && <PatientDetail />}
-      {(sidePanelView === "twins" || sidePanelView === "drill-down") && <DigitalTwins />}
       {sidePanelView === "interventions" && <InterventionCards />}
     </div>
   );

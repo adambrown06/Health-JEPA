@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls, Html, Line } from "@react-three/drei";
+import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { useAppStore } from "@/lib/store";
 
@@ -230,38 +230,6 @@ function CameraController() {
   return null;
 }
 
-// --- Trajectory line for interventions ---
-
-function TrajectoryLine() {
-  const intervention = useAppStore((s) => s.activeIntervention);
-  if (!intervention) return null;
-  const end = intervention.target_coordinate;
-  const start: [number, number, number] = [0, 0, 0];
-  const endPt: [number, number, number] = [end.x, end.y, end.z];
-
-  return (
-    <group>
-      <Line
-        points={[start, endPt]}
-        color="#2EC4C7"
-        lineWidth={2}
-        dashed
-        dashSize={0.4}
-        gapSize={0.2}
-      />
-      <mesh position={[end.x, end.y, end.z]}>
-        <sphereGeometry args={[0.25, 16, 16]} />
-        <meshStandardMaterial color="#1FA3B3" emissive="#0E7C91" emissiveIntensity={0.5} transparent opacity={0.95} />
-      </mesh>
-      <Html position={[end.x, end.y + 0.6, end.z]} center>
-        <div className="bg-[#0E7C91]/95 text-white text-xs px-2 py-1 rounded whitespace-nowrap pointer-events-none select-none border border-[#2EC4C7]/50">
-          Projected Position
-        </div>
-      </Html>
-    </group>
-  );
-}
-
 // --- Main scene ---
 
 function SceneContents() {
@@ -312,7 +280,6 @@ function SceneContents() {
         />
       ))}
 
-      <TrajectoryLine />
       <CameraController />
       <OrbitControls enableDamping dampingFactor={0.1} />
     </>

@@ -12,7 +12,7 @@ import type {
 
 export type AppPhase = "ingestion" | "loading" | "dashboard";
 
-export type SidePanelView = "stats" | "wearables" | "twins" | "drill-down" | "interventions" | "patient-detail";
+export type SidePanelView = "stats" | "wearables" | "interventions" | "patient-detail";
 
 interface AppState {
   phase: AppPhase;
@@ -100,7 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedPatientId: twin?.id ?? null,
       selectedPoint: null,
       focusedClusterId: twin?.cluster_id ?? null,
-      sidePanelView: twin ? "twins" : get().sidePanelView,
+      sidePanelView: twin ? "stats" : get().sidePanelView,
     });
   },
 
@@ -123,7 +123,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         selectedTwin: twinMatch,
         selectedPoint: null,
         focusedClusterId: twinMatch.cluster_id,
-        sidePanelView: "twins",
+        sidePanelView: "stats",
       });
       return;
     }
