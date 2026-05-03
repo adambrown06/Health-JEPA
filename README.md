@@ -93,6 +93,13 @@ All paths assume **current working directory = repo root**.
 
 ---
 
-## GitHub project name
+## GitHub and local folder name
 
-Rename the GitHub repository under **Settings → General → Repository name** to **`Health-JEPA`** (hyphenated names display cleanly). Local folder name can stay anything you like; `git remote` URLs update automatically after a rename.
+1. **GitHub:** In **Settings → General → Repository name**, set **`Health-JEPA`**.  
+   This clone’s `origin` URL is already set to `https://github.com/adambrown06/Health-JEPA.git`; if your GitHub repo is still named `Cohort-Compass`, rename it on GitHub first (or run `git remote set-url origin …` to match whatever URL you use).
+
+2. **Local folder:** Close Cursor (the IDE locks the directory on Windows), then rename **`Cohort Compass`** → **`Health-JEPA`** in Explorer, or from PowerShell:
+   ```powershell
+   Rename-Item -LiteralPath "$env:USERPROFILE\Cohort Compass" -NewName "Health-JEPA"
+   ```
+   Alternatively, run **`scripts/rename-folder-after-close-ide.ps1`** after closing the IDE (it renames the repo root folder).

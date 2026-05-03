@@ -1,5 +1,5 @@
 """
-Counterfactual Twin Search — the Cohort Compass production flow.
+Counterfactual Twin Search — Health-JEPA latent retrieval (Qdrant).
 
 Given a test patient x and a hypothetical intervention z we want to answer:
 
