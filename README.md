@@ -2,15 +2,17 @@
 
 Action-conditional **Joint-Embedding Predictive Architecture (JEPA)** for irregular clinical time series, trained on an **All of Us** cardiometabolic cohort. This repository is the research artifact: model code, evaluation scripts, logged experiment outputs, and the ML4H-style paper sources under [`docs/paper/`](docs/paper/).
 
+**Health-JEPA** · [GitHub repository](https://github.com/adambrown06/Cohort-Compass)
+
 ---
 
-## Archive: Cohort Compass platform
+## Archive branch
 
-The prior **Cohort Compass** monorepo (Next.js frontend, FastAPI/Celery backend, and `backend/ml/` layout) is frozen on branch **`archive/cohort-compass-full`** at the last snapshot before this extraction. To inspect or revive that tree:
+The legacy **full-stack monorepo** snapshot (Next.js UI, FastAPI/Celery, original `backend/` layout) lives on **`archive/legacy-monorepo`**.
 
 ```bash
 git fetch origin
-git checkout archive/cohort-compass-full
+git checkout archive/legacy-monorepo
 ```
 
 ---
@@ -90,17 +92,3 @@ All paths assume **current working directory = repo root**.
 | Regenerate paper tables | `python -m ml.aggregate_results` |
 | Regenerate figures | `python -m ml.plot_ablation_figures` |
 | Multi-seed training sweep | `python -m ml.run_ablation_seeds` |
-
----
-
-## GitHub and local folder name
-
-1. **GitHub:** This project tracks **`https://github.com/adambrown06/Cohort-Compass`**. To change the public project title URL to **`Health-JEPA`**, use **Settings → General → Repository name** on GitHub; afterward run  
-   `git remote set-url origin https://github.com/adambrown06/Health-JEPA.git`  
-   (GitHub shows the exact URL after you rename).
-
-2. **Local folder:** Close Cursor (the IDE locks the directory on Windows), then rename **`Cohort Compass`** → **`Health-JEPA`** in Explorer, or from PowerShell:
-   ```powershell
-   Rename-Item -LiteralPath "$env:USERPROFILE\Cohort Compass" -NewName "Health-JEPA"
-   ```
-   Alternatively, run **`scripts/rename-folder-after-close-ide.ps1`** after closing the IDE (it renames the repo root folder).

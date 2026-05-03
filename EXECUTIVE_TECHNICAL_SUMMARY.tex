@@ -11,33 +11,28 @@
 \usepackage{hyperref}
 \usepackage{enumitem}
 
-\title{Health-JEPA --- Executive Technical Summary \textit{(archived Cohort Compass full-stack era)}}
+\title{Health-JEPA --- Technical Summary}
 \author{}
 \date{}
 
 \begin{document}
 \maketitle
 
-\noindent\textbf{Audience:} Engineers joining the project who need a fast, accurate mental model of the ML core and the product.
+\noindent\textbf{Audience:} Contributors who need a concise map of the research codebase and the JEPA training contract.
 
-\section{What the Project Is}
+\section{What This Repository Is}
 
-\textbf{Cohort Compass} is a causal healthcare analytics platform that combines:
-\begin{itemize}[leftmargin=1.5em]
-  \item A clinical time-series representation model (JEPA) that maps patient history into a latent origin embedding and predicts movement under different interventions (counterfactual trajectories in embedding space, not raw lab reconstruction).
-  \item Vector search over historical patients (Qdrant) to find similar twins and ground predictions in real outcomes.
-  \item LLM/RAG layers that convert structured results into clinician-facing narrative.
-  \item A Next.js UI (galaxy/neighborhood visualization) and a FastAPI backend with async jobs (Celery) for end-to-end analysis.
-\end{itemize}
+\textbf{Health-JEPA} is an action-conditional JEPA for irregular clinical time series: model code under \texttt{ml/}, experiment logs under \texttt{ml/results/}, reproducibility scripts, and the paper bundle under \texttt{docs/paper/}.
+Training data tensors are produced via \texttt{notebooks/aou\_extraction\_pipeline.ipynb} and loaded from \texttt{training\_data/} (not committed).
 
-\noindent\textbf{Primary data source for training cohorts:} All of Us (AoU) OMOP-style extracts in the Researcher Workbench (BigQuery CDR), with an index event (for example, first drug exposure) and $\pm 365$ day windows for pre/post labs and vitals.
+\noindent A \textbf{legacy full-stack snapshot} (Next.js UI, FastAPI, Celery, original \texttt{backend/} tree) is preserved only on git branch \texttt{archive/legacy-monorepo}.
 
 \section{The JEPA Model (\texttt{CausalJEPA})}
 
 \subsection{Idea in One Sentence}
-The model learns joint embeddings so that \textbf{context (pre-intervention series) + intervention} predicts a \textbf{target representation (post-intervention series)} in latent space using MSE in latent space, with no decoder and no raw-value reconstruction loss.
+The model learns joint embeddings so that \textbf{context (pre-intervention series) + intervention} predicts a \textbf{target representation (post-intervention series)} in latent space using an MSE-style loss in latent space, without raw reconstruction.
 
-\subsection{Components (Implementation: \texttt{backend/ml/jepa\_model.py})}
+\subsection{Components (\texttt{ml/jepa\_model.py})}
 
 \begin{longtable}{p{0.27\textwidth} p{0.68\textwidth}}
 \toprule
@@ -50,107 +45,58 @@ Same architecture; weights updated only via EMA from the context encoder (\textt
 \texttt{action\_embedding} &
 \texttt{nn.Embedding(K, z\_dim)} mapping categorical intervention ID to dense vector. \\
 \texttt{Predictor} &
-MLP: $\mathrm{concat}(s_x, \mathrm{embed}(z)) \rightarrow \hat{s}_y$ with the same dimensionality as $s_y$. \\
+MLP with AdaLN-Zero or concat conditioning: predicts $\hat{s}_y$ with the same dimensionality as $s_y$. \\
 \bottomrule
 \end{longtable}
 
-\subsection{Training Mechanics (When \texttt{backend/ml/train.py} Is Fully Wired)}
+\subsection{Training Loop (\texttt{ml/train\_jepa.py})}
 \begin{enumerate}[leftmargin=1.5em]
   \item Forward:
   \[
   \hat{s}_y, s_y = \mathrm{model}(\mathrm{context\_x}, \mathrm{target\_y}, \mathrm{intervention\_z})
   \]
-  \item Loss:
-  \[
-  \mathrm{MSE}(\hat{s}_y, s_y)
-  \]
-  where $s_y$ is detached (no gradient through target encoder from this loss).
-  \item Optimizer updates context encoder, action embedding, and predictor only.
-  \item After each step:
-  \[
-  \theta_{\text{target}} \leftarrow m\theta_{\text{target}} + (1-m)\theta_{\text{context}}
-  \]
-  via \texttt{update\_target\_encoder(momentum)}.
+  \item Loss: $\mathrm{MSE}(\hat{s}_y, s_y)$ (or cosine variant); $s_y$ detached from loss gradients through the target encoder.
+  \item Optimizer updates context encoder, action embedding, and predictor (and optional regularizers per config).
+  \item EMA sync: $\theta_{\text{target}} \leftarrow m\theta_{\text{target}} + (1-m)\theta_{\text{context}}$.
 \end{enumerate}
 
-This follows the I-JEPA / JEPA pattern: predict in representation space and reduce collapse risk using a predictor bottleneck plus EMA target encoder.
-
-\subsection{Training Tensors (Batch Contract)}
+\subsection{Batch Contract}
 
 \begin{longtable}{p{0.12\textwidth} p{0.20\textwidth} p{0.23\textwidth} p{0.40\textwidth}}
 \toprule
 \textbf{Symbol} & \textbf{Tensor} & \textbf{Shape (Conceptual)} & \textbf{Meaning} \\
 \midrule
-$x$ & \texttt{context\_x} & \texttt{(B, T\_pre, F)} & Pre-index clinical values (labs/vitals aligned to fixed feature vocabulary). \\
+$x$ & \texttt{context\_x} & \texttt{(B, T\_pre, F)} & Pre-index clinical values. \\
  & \texttt{context\_mask} & \texttt{(B, T\_pre, F)} & 1 = observed, 0 = missing. \\
- & \texttt{context\_timestamps} & \texttt{(B, T\_pre)} & Seconds from window start (irregular sampling). \\
-$y$ & \texttt{target\_y} & \texttt{(B, T\_post, F)} & Post-index window (same feature dimension $F$). \\
+ & \texttt{context\_timestamps} & \texttt{(B, T\_pre)} & Seconds from window start. \\
+$y$ & \texttt{target\_y} & \texttt{(B, T\_post, F)} & Post-index window. \\
  & \texttt{target\_mask}, \texttt{target\_timestamps} & Same pattern & Post-window mask and timebase. \\
-$z$ & \texttt{intervention\_z} & \texttt{(B,)} \texttt{LongTensor} & Integer ID in $0,\dots,K-1$ (drug/protocol class). \\
+$z$ & \texttt{intervention\_z} & \texttt{(B,)} \texttt{LongTensor} & Intervention ID in $0,\dots,K-1$. \\
 \bottomrule
 \end{longtable}
-
-\noindent\textbf{Forward outputs:} \texttt{predicted\_s\_y}, \texttt{s\_y} each with shape \texttt{(B, d\_model)} (default \texttt{d\_model=256}).
-
-\subsection{Inference Helpers (Deployment)}
-\begin{itemize}[leftmargin=1.5em]
-  \item \texttt{encode(values, mask, timestamps, ...)} $\rightarrow$ origin embedding \texttt{(B, d\_model)} for indexing/UI.
-  \item \texttt{predict\_counterfactual(origin\_embedding, intervention\_z)} $\rightarrow$ predicted latent trajectory for a given intervention.
-\end{itemize}
-
-\noindent\textbf{Compatibility note:} \texttt{ClinicalJEPA} remains an alias for \texttt{CausalJEPA} to preserve existing imports.
-
-\section{End-to-End Product I/O}
-
-\subsection{Typical API Input (High Level)}
-Defined in \texttt{backend/schemas/inference.py} and related patient schemas.
-
-\begin{longtable}{p{0.28\textwidth} p{0.67\textwidth}}
-\toprule
-\textbf{Input} & \textbf{Description} \\
-\midrule
-\texttt{clinical\_time\_series} & Structured series of observations with timestamps, concept IDs (OMOP/FHIR-like), values, and feature ordering; see \texttt{ClinicalTimeSeries} in \texttt{backend/schemas/patient.py}. \\
-\texttt{demographics} & Optional demographics (age, sex, etc.) for ranking/UI context. \\
-\texttt{requested\_interventions} & Optional subset of intervention codes to simulate; default is full registry in \texttt{services/counterfactual.py}. \\
-\bottomrule
-\end{longtable}
-
-\subsection{Typical API Output (High Level)}
-\begin{longtable}{p{0.32\textwidth} p{0.63\textwidth}}
-\toprule
-\textbf{Output} & \textbf{Description} \\
-\midrule
-Per-intervention simulation & Latent predicted embedding, mapped UI coordinates, confidence, and risk deltas; see \texttt{SimulatedTrajectory} in \texttt{schemas/inference.py}. \\
-Twin matches & Similar historical patients from the vector DB (\texttt{TwinMatch}). \\
-Ranked/narrative layer & RAG-generated summaries and neighborhood payload for the 3D/galaxy UI. \\
-\bottomrule
-\end{longtable}
-
-\noindent In short: \textbf{inputs} are clinical time series (plus optional demographics and intervention subset), and \textbf{outputs} are counterfactual latent trajectories, similarity-based evidence, and text (not raw reconstructed labs).
 
 \section{Repository Map}
 \begin{longtable}{p{0.32\textwidth} p{0.63\textwidth}}
 \toprule
 \textbf{Area} & \textbf{Path} \\
 \midrule
-JEPA definition & \texttt{backend/ml/jepa\_model.py} \\
-Training outline / dataset stub & \texttt{backend/ml/train.py} \\
-AoU extract to tensors notebook & \texttt{backend/notebooks/aou\_extraction\_pipeline.ipynb} \\
-Counterfactual orchestration & \texttt{backend/services/counterfactual.py} \\
-Async pipeline & \texttt{backend/worker/tasks.py} \\
-API & \texttt{backend/main.py}, \texttt{backend/schemas/} \\
-Frontend & \texttt{frontend/src/} \\
+JEPA architecture & \texttt{ml/jepa\_model.py} \\
+Training entry point & \texttt{ml/train\_jepa.py} \\
+Dataset loader & \texttt{ml/data.py} \\
+Regularizers (SIGReg, orthogonality) & \texttt{ml/regularizers.py} \\
+Downstream eval / baselines & \texttt{ml/outcome\_eval.py}, \texttt{ml/paper\_baselines.py} \\
+Twin search / Qdrant & \texttt{ml/twin\_search.py}, \texttt{ml/qdrant\_eval.py} \\
+Paper tables aggregate & \texttt{ml/aggregate\_results.py} \\
+AoU extraction notebook & \texttt{notebooks/aou\_extraction\_pipeline.ipynb} \\
+Paper sources & \texttt{docs/paper/paper.tex} \\
+Legacy full-stack tree & branch \texttt{archive/legacy-monorepo} only \\
 \bottomrule
 \end{longtable}
 
-\section{Open Integration Points for New Contributors}
+\section{Contributors}
 \begin{itemize}[leftmargin=1.5em]
-  \item \textbf{Training:} Activate the full loop in \texttt{train.py}, align \texttt{num\_features}/\texttt{num\_interventions} with exported AoU manifests, and save checkpoints consumed by \texttt{settings.jepa\_checkpoint\_path}.
-  \item \textbf{Inference:} Ensure intervention IDs at inference match the embedding table used in training (\texttt{action\_embedding} indices).
-  \item \textbf{Registry consistency:} The causal engine currently contains demo intervention entries; production cohorts may use different $K$ and labels, so registry and checkpoint must stay synchronized.
+  \item Align manifests (\texttt{training\_data/*.json}) with exported AoU cohorts and checkpoint intervention cardinality $K$.
+  \item Run training from repo root: \texttt{python -m ml.train\_jepa --help}.
 \end{itemize}
-
-\vspace{1em}
-\noindent\textit{This document reflects the current codebase snapshot. Verify \texttt{config.py} values and checkpoint paths in your environment.}
 
 \end{document}

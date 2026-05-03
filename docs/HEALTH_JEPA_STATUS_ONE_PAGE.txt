@@ -14,9 +14,9 @@
   intervention z — in embedding space (MSE on latent vectors), with no
   reconstruction loss on raw labs.
 
-  Downstream, vector search (Qdrant “twins”), an LLM/RAG layer, a Next.js UI,
-  and a FastAPI + Celery pipeline deliver narratives and a neighborhood
-  visualization for end-to-end analysis.
+  Downstream research artifacts include vector search (Qdrant “twins”) and full
+  evaluation suites under ml/. An older full-stack prototype (Next.js, FastAPI,
+  Celery, LLM/RAG) is archived on git branch archive/legacy-monorepo only.
 
 
 2. All of Us (AoU) data collection (work completed)
