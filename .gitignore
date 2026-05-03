@@ -10,30 +10,19 @@ venv/
 .pytest_cache/
 .mypy_cache/
 
-# AoU / sensitive training shards (never commit participant-level tensors)
+# Participant-level tensors (All of Us DUA)
 training_data/
 
-# Large ML artifacts — regenerate with `python -m ml.train_jepa` and eval scripts
+# Large ML artifacts — regenerate with training / eval scripts
 ml/checkpoints/
 ml/qdrant_local/
 ml/qdrant_twins/
 ml/qdrant_paper_eval/
 
-# Legacy paths (archive branch may still use backend/)
-backend/**/__pycache__/
-backend/.venv/
-backend/venv/
-backend/.env
-backend/training_data/
-backend/ml/checkpoints/
-backend/ml/qdrant_local/
-backend/ml/qdrant_twins/
-backend/ml/qdrant_paper_eval/
-
 # External / scratch
 _external_Mock-Health-JEPA/
 
-# LaTeX auxiliary (keep sources; ignore build noise)
+# LaTeX auxiliary
 docs/paper/*.aux
 docs/paper/*.log
 docs/paper/*.out
@@ -47,5 +36,4 @@ Thumbs.db
 .idea/
 .vscode/
 
-# Nested git backup (legacy)
 .git_frontend_backup/

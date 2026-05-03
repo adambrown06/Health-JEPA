@@ -1,0 +1,220 @@
+﻿{
+  "config": {
+    "checkpoint": "ml/checkpoints/jepa_best.pt",
+    "qdrant_path": "ml/qdrant_local",
+    "collection": "aou_jepa_patients",
+    "reset": true,
+    "top_ks": [
+      1,
+      5,
+      10,
+      25
+    ],
+    "upsert_batch": 256,
+    "num_examples_to_show": 3,
+    "out_dir": "ml/results"
+  },
+  "checkpoint_info": {
+    "epoch": 8,
+    "val_loss": 0.04472126960754395
+  },
+  "intervention_labels": [
+    "metformin",
+    "atorvastatin",
+    "lisinopril"
+  ],
+  "split_sizes": {
+    "train": 2989,
+    "val": 640,
+    "test": 640
+  },
+  "encode_secs": 1.739168643951416,
+  "upsert_secs": 28.64620351791382,
+  "retrieval": {
+    "n_query": 640,
+    "embedding_dim": 128,
+    "latency_ms": {
+      "mean": 68.35039312554727,
+      "median": 67.89644999662414,
+      "p95": 79.26667499705218,
+      "p99": 85.28293400304393
+    },
+    "majority_baseline_acc": 0.3515625,
+    "per_k": {
+      "1": {
+        "any_hit_rate": 0.325,
+        "all_same_rate": 0.325,
+        "majority_vote_acc": 0.325,
+        "random_majority_vote_acc": 0.3640625,
+        "lift_over_random": -0.0390625,
+        "mean_top_cosine": 0.9928879464395688,
+        "per_class_majority_vote_acc": {
+          "lisinopril": 0.3155339805825243,
+          "atorvastatin": 0.3333333333333333,
+          "metformin": 0.3253588516746411
+        }
+      },
+      "5": {
+        "any_hit_rate": 0.8625,
+        "all_same_rate": 0.003125,
+        "majority_vote_acc": 0.340625,
+        "random_majority_vote_acc": 0.3234375,
+        "lift_over_random": 0.017187500000000022,
+        "mean_top_cosine": 0.990309718651367,
+        "per_class_majority_vote_acc": {
+          "lisinopril": 0.30097087378640774,
+          "atorvastatin": 0.3511111111111111,
+          "metformin": 0.3684210526315789
+        }
+      },
+      "10": {
+        "any_hit_rate": 0.98125,
+        "all_same_rate": 0.0,
+        "majority_vote_acc": 0.365625,
+        "random_majority_vote_acc": 0.3515625,
+        "lift_over_random": 0.014062499999999978,
+        "mean_top_cosine": 0.9888126439418142,
+        "per_class_majority_vote_acc": {
+          "lisinopril": 0.30097087378640774,
+          "atorvastatin": 0.40444444444444444,
+          "metformin": 0.3875598086124402
+        }
+      },
+      "25": {
+        "any_hit_rate": 1.0,
+        "all_same_rate": 0.0,
+        "majority_vote_acc": 0.365625,
+        "random_majority_vote_acc": 0.328125,
+        "lift_over_random": 0.03749999999999998,
+        "mean_top_cosine": 0.9863682598930458,
+        "per_class_majority_vote_acc": {
+          "lisinopril": 0.2912621359223301,
+          "atorvastatin": 0.40444444444444444,
+          "metformin": 0.39712918660287083
+        }
+      }
+    },
+    "examples": [
+      {
+        "query_patient_id": 1000105,
+        "true_intervention": "lisinopril",
+        "neighbors": [
+          {
+            "patient_id": 1435708,
+            "intervention": "atorvastatin",
+            "cosine": 0.9929348005749286
+          },
+          {
+            "patient_id": 4370158,
+            "intervention": "lisinopril",
+            "cosine": 0.9921017138810515
+          },
+          {
+            "patient_id": 1383172,
+            "intervention": "metformin",
+            "cosine": 0.9914294484593501
+          },
+          {
+            "patient_id": 8451285,
+            "intervention": "metformin",
+            "cosine": 0.9909417809258867
+          },
+          {
+            "patient_id": 2854961,
+            "intervention": "metformin",
+            "cosine": 0.9908048410481565
+          }
+        ]
+      },
+      {
+        "query_patient_id": 1010044,
+        "true_intervention": "lisinopril",
+        "neighbors": [
+          {
+            "patient_id": 1892463,
+            "intervention": "atorvastatin",
+            "cosine": 0.9953784495973913
+          },
+          {
+            "patient_id": 5016469,
+            "intervention": "metformin",
+            "cosine": 0.9944461699740851
+          },
+          {
+            "patient_id": 1441841,
+            "intervention": "atorvastatin",
+            "cosine": 0.9941729312513782
+          },
+          {
+            "patient_id": 1958653,
+            "intervention": "atorvastatin",
+            "cosine": 0.9939832802081097
+          },
+          {
+            "patient_id": 1383568,
+            "intervention": "metformin",
+            "cosine": 0.9939256354960124
+          }
+        ]
+      },
+      {
+        "query_patient_id": 1013794,
+        "true_intervention": "atorvastatin",
+        "neighbors": [
+          {
+            "patient_id": 2349278,
+            "intervention": "metformin",
+            "cosine": 0.9993012470852765
+          },
+          {
+            "patient_id": 2384266,
+            "intervention": "lisinopril",
+            "cosine": 0.9980717402025109
+          },
+          {
+            "patient_id": 3414112,
+            "intervention": "atorvastatin",
+            "cosine": 0.9969646063938957
+          },
+          {
+            "patient_id": 4525182,
+            "intervention": "lisinopril",
+            "cosine": 0.9966354315889809
+          },
+          {
+            "patient_id": 3309689,
+            "intervention": "atorvastatin",
+            "cosine": 0.9963821182183665
+          }
+        ]
+      }
+    ]
+  },
+  "verdicts": [
+    {
+      "check": "[twin] Top-5 cosine high (patients cluster in embedding space)",
+      "ok": true,
+      "detail": "mean top-5 cosine = +0.990"
+    },
+    {
+      "check": "[twin] Top-5 surfaces at least one same-intervention twin",
+      "ok": true,
+      "detail": "any-match in top-5 = 86.2%"
+    },
+    {
+      "check": "[intervention] Top-5 majority-vote lifts over random retrieval",
+      "ok": false,
+      "detail": "JEPA 34.1% vs random 32.3% (lift +1.7pp)"
+    },
+    {
+      "check": "[intervention] Top-10 majority-vote lifts over random retrieval",
+      "ok": false,
+      "detail": "JEPA 36.6% vs random 35.2% (lift +1.4pp)"
+    },
+    {
+      "check": "Query latency is interactive (filtered scan at 3k points)",
+      "ok": true,
+      "detail": "p95 = 79.3 ms (full_scan_threshold=10k, so filter => scan)"
+    }
+  ]
+}

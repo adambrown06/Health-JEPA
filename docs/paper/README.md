@@ -23,19 +23,19 @@ From the repo root:
 
 ```powershell
 # 1. Train all ablations (~10 min total on an RTX 4060 laptop)
-powershell -File backend/ml/run_ablations.ps1
+powershell -File ml/run_ablations.ps1
 
 # 2. Run the real-unit outcome evaluation for every checkpoint
-powershell -File backend/ml/run_outcome_evals.ps1
+powershell -File ml/run_outcome_evals.ps1
 
 # 3. Rebuild tables (LaTeX / Markdown / CSV)
-python -m backend.ml.aggregate_results
+python -m ml.aggregate_results
 
 # 4. Rebuild the two paper figures
-python backend/ml/plot_ablation_figures.py
+python -m ml.plot_ablation_figures
 ```
 
-Training uses data in `backend/training_data/patient_tensors.npz`
+Training uses data in `training_data/patient_tensors.npz`
 (N=4,269 patient-intervention examples, 25 channels, 3 interventions).
 
 ## Compiling the PDF

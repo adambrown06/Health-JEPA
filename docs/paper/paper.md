@@ -382,7 +382,7 @@ On systolic BP (n=481), JEPA_RIDGE is statistically tied with GBT:
 ΔMAE = -0.003 mmHg, 95% CI [-0.30, +0.28], p = 0.99 (two-sided). On
 HbA1c (n=250), JEPA_RIDGE is significantly better than Ridge
 (ΔMAE = -0.178, 95% CI [-0.256, -0.104], p < 0.001) but worse than GBT.
-Full bootstrap tables are in `backend/ml/results/outcome_report_full.json`.
+Full bootstrap tables are in `ml/results/outcome_report_full.json`.
 
 ---
 
@@ -485,14 +485,14 @@ to that end.
 
 ## Code and data availability
 
-- `backend/ml/jepa_model.py` — Causal-JEPA architecture (AdaLN-Zero predictor).
-- `backend/ml/regularizers.py` — SIGReg and action-orthogonality.
-- `backend/ml/train_jepa.py` — training loop.
-- `backend/ml/outcome_eval.py` — real-unit downstream evaluation (all baselines).
-- `backend/ml/paper_eval.py` — self-supervised paper-battery.
-- `backend/ml/twin_search.py` — Qdrant twin retrieval.
-- `backend/ml/aggregate_results.py` — produces the tables in this paper.
-- `backend/notebooks/aou_extraction_pipeline.ipynb` — *All of Us* extraction.
+- `ml/jepa_model.py` — Causal-JEPA architecture (AdaLN-Zero predictor).
+- `ml/regularizers.py` — SIGReg and action-orthogonality.
+- `ml/train_jepa.py` — training loop.
+- `ml/outcome_eval.py` — real-unit downstream evaluation (all baselines).
+- `ml/paper_eval.py` — self-supervised paper-battery.
+- `ml/twin_search.py` — Qdrant twin retrieval.
+- `ml/aggregate_results.py` — produces the tables in this paper.
+- `notebooks/aou_extraction_pipeline.ipynb` — *All of Us* extraction.
 
 Raw patient tensors cannot be redistributed per the *All of Us* data-use
 agreement; any approved researcher can reproduce the cohort via the

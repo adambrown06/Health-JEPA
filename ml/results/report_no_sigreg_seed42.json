@@ -1,0 +1,150 @@
+﻿{
+  "cohort_id": "aou_cardiometabolic_weekly_v2",
+  "device": "cuda",
+  "wallclock_sec": 83.84437489509583,
+  "best_epoch": 13,
+  "best_val_loss": 0.02415364980697632,
+  "config": {
+    "npz_path": "training_data/patient_tensors.npz",
+    "manifest_path": "training_data/manifest.json",
+    "intervention_map_path": "training_data/intervention_map.json",
+    "max_seq_len": 64,
+    "batch_size": 64,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "seed": 42,
+    "split_seed": 42,
+    "append_seed_to_artifacts": true,
+    "num_workers": 0,
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 3,
+    "d_ff": 256,
+    "z_dim": 64,
+    "predictor_hidden": 256,
+    "predictor_layers": 3,
+    "predictor_style": "adaln",
+    "dropout": 0.1,
+    "ema_momentum_start": 0.996,
+    "ema_momentum_end": 0.9999,
+    "epochs": 80,
+    "lr": 0.0002,
+    "weight_decay": 0.0005,
+    "warmup_epochs": 5,
+    "grad_clip": 1.0,
+    "early_stop_patience": 15,
+    "loss_type": "cosine",
+    "sigreg_lambda": 0.0,
+    "sigreg_projections": 1024,
+    "sigreg_knots": 17,
+    "sigreg_on_predictor": true,
+    "orth_lambda": 0.5,
+    "out_dir": "ml/results",
+    "ckpt_dir": "ml/checkpoints"
+  },
+  "data_meta": {
+    "num_patients": 4269,
+    "num_features": 25,
+    "num_interventions": 3,
+    "intervention_labels": [
+      "metformin",
+      "atorvastatin",
+      "lisinopril"
+    ],
+    "split_sizes": {
+      "train": 2989,
+      "val": 640,
+      "test": 640
+    },
+    "train_intervention_counts": [
+      975,
+      1050,
+      964
+    ],
+    "val_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "test_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "max_seq_len": 64
+  },
+  "metrics": {
+    "train": {
+      "mse": 0.8668872714042664,
+      "cosine_sim": 0.9875978231430054,
+      "explained_var": 0.21890061780135617,
+      "target_embedding_std": 0.40970098972320557,
+      "context_embedding_std": 0.6014396548271179,
+      "intervention_sensitivity": 0.32041770219802856,
+      "intervention_sensitivity_relative": 0.7820769542551096,
+      "n_examples": 2989
+    },
+    "val": {
+      "mse": 0.8952703475952148,
+      "cosine_sim": 0.987923264503479,
+      "explained_var": 0.20656238127118898,
+      "target_embedding_std": 0.40324532985687256,
+      "context_embedding_std": 0.6114419102668762,
+      "intervention_sensitivity": 0.32077573736508685,
+      "intervention_sensitivity_relative": 0.7954853128217074,
+      "n_examples": 640
+    },
+    "test": {
+      "mse": 0.874126136302948,
+      "cosine_sim": 0.9869063496589661,
+      "explained_var": 0.24282747796958204,
+      "target_embedding_std": 0.42023342847824097,
+      "context_embedding_std": 0.635444164276123,
+      "intervention_sensitivity": 0.32279487947622937,
+      "intervention_sensitivity_relative": 0.7681323226596743,
+      "n_examples": 640
+    }
+  },
+  "linear_probe": {
+    "train_acc": 0.4807627969220475,
+    "eval_acc": 0.4625,
+    "per_class_eval_acc": {
+      "0": 0.5406698564593302,
+      "1": 0.47555555555555556,
+      "2": 0.36893203883495146
+    },
+    "majority_baseline": 0.3515625
+  },
+  "verdicts": [
+    {
+      "check": "No representation collapse",
+      "ok": true,
+      "detail": "target std = 0.420 (>0.05)"
+    },
+    {
+      "check": "Predictor tracks target direction",
+      "ok": true,
+      "detail": "test cosine = +0.987 (want > 0.5)"
+    },
+    {
+      "check": "Positive explained variance",
+      "ok": true,
+      "detail": "test EV = +0.243"
+    },
+    {
+      "check": "Predictor conditions on intervention",
+      "ok": true,
+      "detail": "\u0394(\u015d_y across z)/std(s_y) = 0.768 (want > 0.10)"
+    },
+    {
+      "check": "Encoder separates treatment cohorts",
+      "ok": true,
+      "detail": "probe acc 46.2% vs majority 35.2%"
+    },
+    {
+      "check": "No pathological train/val gap",
+      "ok": true,
+      "detail": "val\u2212train MSE = +0.0284"
+    }
+  ]
+}

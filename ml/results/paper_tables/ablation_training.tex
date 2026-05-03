@@ -1,0 +1,13 @@
+\begin{tabular}{llrrrrrrr}
+\toprule
+ablation & description & val loss & test MSE & test cos & test EV & $\sigma$(s_y) & z-sens/$\sigma$ & probe acc \\
+\midrule
+\texttt{full} & AdaLN + SIGReg + Orth, z=64 & 0.0181 & 0.765 & 0.990 & 0.201 & 0.331 & 1.555 & 45.0\% \\
+\texttt{small\_z} & AdaLN + SIGReg + Orth, z=16 & 0.0124 & 1.557 & 0.994 & 0.174 & 0.321 & 1.231 & 43.6\% \\
+\texttt{no\_sigreg} & AdaLN + Orth, z=64 (no SIGReg) & 0.0242 & 0.874 & 0.987 & 0.243 & 0.420 & 0.768 & 46.2\% \\
+\texttt{no\_orth} & AdaLN + SIGReg, z=64 (no Orth) & 0.0183 & 0.733 & 0.990 & 0.203 & 0.331 & 1.611 & 45.0\% \\
+\texttt{no\_lewm} & AdaLN only, z=64 (no SIGReg, no Orth) & 0.0244 & 0.845 & 0.987 & 0.246 & 0.420 & 0.663 & 46.4\% \\
+\texttt{concat} & Concat predictor + SIGReg + Orth, z=64 & 0.1081 & 0.685 & 0.945 & 0.031 & 0.337 & 0.145 & 43.0\% \\
+\texttt{vanilla} & Concat + z=16, no LeWM regs (pre-LeWM JEPA) & 0.1126 & 0.708 & 0.944 & 0.022 & 0.340 & 0.266 & 44.5\% \\
+\bottomrule
+\end{tabular}
