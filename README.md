@@ -95,8 +95,9 @@ All paths assume **current working directory = repo root**.
 
 ## GitHub and local folder name
 
-1. **GitHub:** In **Settings → General → Repository name**, set **`Health-JEPA`**.  
-   This clone’s `origin` URL is already set to `https://github.com/adambrown06/Health-JEPA.git`; if your GitHub repo is still named `Cohort-Compass`, rename it on GitHub first (or run `git remote set-url origin …` to match whatever URL you use).
+1. **GitHub:** This project tracks **`https://github.com/adambrown06/Cohort-Compass`**. To change the public project title URL to **`Health-JEPA`**, use **Settings → General → Repository name** on GitHub; afterward run  
+   `git remote set-url origin https://github.com/adambrown06/Health-JEPA.git`  
+   (GitHub shows the exact URL after you rename).
 
 2. **Local folder:** Close Cursor (the IDE locks the directory on Windows), then rename **`Cohort Compass`** → **`Health-JEPA`** in Explorer, or from PowerShell:
    ```powershell
