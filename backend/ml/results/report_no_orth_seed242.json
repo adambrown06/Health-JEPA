@@ -1,0 +1,150 @@
+{
+  "cohort_id": "aou_cardiometabolic_weekly_v2",
+  "device": "cuda",
+  "wallclock_sec": 102.57190942764282,
+  "best_epoch": 15,
+  "best_val_loss": 0.014418983459472656,
+  "config": {
+    "npz_path": "backend/training_data/patient_tensors.npz",
+    "manifest_path": "backend/training_data/manifest.json",
+    "intervention_map_path": "backend/training_data/intervention_map.json",
+    "max_seq_len": 64,
+    "batch_size": 64,
+    "val_fraction": 0.15,
+    "test_fraction": 0.15,
+    "seed": 242,
+    "split_seed": 42,
+    "append_seed_to_artifacts": true,
+    "num_workers": 0,
+    "d_model": 128,
+    "n_heads": 4,
+    "n_layers": 3,
+    "d_ff": 256,
+    "z_dim": 64,
+    "predictor_hidden": 256,
+    "predictor_layers": 3,
+    "predictor_style": "adaln",
+    "dropout": 0.1,
+    "ema_momentum_start": 0.996,
+    "ema_momentum_end": 0.9999,
+    "epochs": 80,
+    "lr": 0.0002,
+    "weight_decay": 0.0005,
+    "warmup_epochs": 5,
+    "grad_clip": 1.0,
+    "early_stop_patience": 15,
+    "loss_type": "cosine",
+    "sigreg_lambda": 0.1,
+    "sigreg_projections": 1024,
+    "sigreg_knots": 17,
+    "sigreg_on_predictor": true,
+    "orth_lambda": 0.0,
+    "out_dir": "backend/ml/results",
+    "ckpt_dir": "backend/ml/checkpoints"
+  },
+  "data_meta": {
+    "num_patients": 4269,
+    "num_features": 25,
+    "num_interventions": 3,
+    "intervention_labels": [
+      "metformin",
+      "atorvastatin",
+      "lisinopril"
+    ],
+    "split_sizes": {
+      "train": 2989,
+      "val": 640,
+      "test": 640
+    },
+    "train_intervention_counts": [
+      975,
+      1050,
+      964
+    ],
+    "val_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "test_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "max_seq_len": 64
+  },
+  "metrics": {
+    "train": {
+      "mse": 0.976733386516571,
+      "cosine_sim": 0.9928184747695923,
+      "explained_var": 0.16058575908365125,
+      "target_embedding_std": 0.3040752708911896,
+      "context_embedding_std": 0.37433645129203796,
+      "intervention_sensitivity": 0.40054171284039813,
+      "intervention_sensitivity_relative": 1.3172452717594656,
+      "n_examples": 2989
+    },
+    "val": {
+      "mse": 0.9943683743476868,
+      "cosine_sim": 0.9927905201911926,
+      "explained_var": 0.14588388216615467,
+      "target_embedding_std": 0.29995423555374146,
+      "context_embedding_std": 0.3779607117176056,
+      "intervention_sensitivity": 0.4004330138365428,
+      "intervention_sensitivity_relative": 1.3349803615785216,
+      "n_examples": 640
+    },
+    "test": {
+      "mse": 0.9789315462112427,
+      "cosine_sim": 0.9927593469619751,
+      "explained_var": 0.1519532031888804,
+      "target_embedding_std": 0.30323702096939087,
+      "context_embedding_std": 0.3865206241607666,
+      "intervention_sensitivity": 0.400887131690979,
+      "intervention_sensitivity_relative": 1.322025689374666,
+      "n_examples": 640
+    }
+  },
+  "linear_probe": {
+    "train_acc": 0.5075276012044162,
+    "eval_acc": 0.4078125,
+    "per_class_eval_acc": {
+      "0": 0.4784688995215311,
+      "1": 0.40444444444444444,
+      "2": 0.33980582524271846
+    },
+    "majority_baseline": 0.3515625
+  },
+  "verdicts": [
+    {
+      "check": "No representation collapse",
+      "ok": true,
+      "detail": "target std = 0.303 (>0.05)"
+    },
+    {
+      "check": "Predictor tracks target direction",
+      "ok": true,
+      "detail": "test cosine = +0.993 (want > 0.5)"
+    },
+    {
+      "check": "Positive explained variance",
+      "ok": true,
+      "detail": "test EV = +0.152"
+    },
+    {
+      "check": "Predictor conditions on intervention",
+      "ok": true,
+      "detail": "\u0394(\u015d_y across z)/std(s_y) = 1.322 (want > 0.10)"
+    },
+    {
+      "check": "Encoder separates treatment cohorts",
+      "ok": true,
+      "detail": "probe acc 40.8% vs majority 35.2%"
+    },
+    {
+      "check": "No pathological train/val gap",
+      "ok": true,
+      "detail": "val\u2212train MSE = +0.0176"
+    }
+  ]
+}

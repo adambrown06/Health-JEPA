@@ -1,0 +1,20 @@
+{
+  "trainings_loaded": [
+    "full",
+    "small_z",
+    "no_sigreg",
+    "no_orth",
+    "no_lewm",
+    "concat",
+    "vanilla"
+  ],
+  "outcomes_loaded": [
+    "full",
+    "small_z",
+    "no_sigreg",
+    "no_orth",
+    "no_lewm",
+    "concat",
+    "vanilla"
+  ]
+}

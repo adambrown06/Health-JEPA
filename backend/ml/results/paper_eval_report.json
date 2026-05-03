@@ -1,0 +1,545 @@
+{
+  "paper_eval_version": "1.1",
+  "config": {
+    "checkpoint": "backend/ml/checkpoints/jepa_best.pt",
+    "out_dir": "backend/ml/results",
+    "feature_vocab_path": "backend/training_data/feature_vocab.json",
+    "qdrant_path": "backend/ml/qdrant_paper_eval",
+    "collection": "aou_jepa_twin_targets_paper",
+    "top_k": 10,
+    "n_eval_patients": 200,
+    "n_perm": 199,
+    "skip_qdrant": false,
+    "twin_reset": true,
+    "n_example_patients": 2,
+    "perm_seed": 0,
+    "skip_baselines": false,
+    "bootstrap_n": 2000,
+    "baseline_mlp_epochs": 80
+  },
+  "checkpoint_info": {
+    "epoch": 13,
+    "val_loss": 0.018123018741607665
+  },
+  "data_meta": {
+    "num_patients": 4269,
+    "num_features": 25,
+    "num_interventions": 3,
+    "intervention_labels": [
+      "metformin",
+      "atorvastatin",
+      "lisinopril"
+    ],
+    "split_sizes": {
+      "train": 2989,
+      "val": 640,
+      "test": 640
+    },
+    "train_intervention_counts": [
+      975,
+      1050,
+      964
+    ],
+    "val_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "test_intervention_counts": [
+      209,
+      225,
+      206
+    ],
+    "max_seq_len": 64
+  },
+  "val_metrics": {
+    "mse": 0.7810567617416382,
+    "cosine_sim": 0.9909385442733765,
+    "explained_var": 0.17643551081357356,
+    "target_embedding_std": 0.3192570209503174,
+    "context_embedding_std": 0.4060778319835663,
+    "intervention_sensitivity": 0.5143565535545349,
+    "intervention_sensitivity_relative": 1.611104908588929,
+    "n_examples": 640
+  },
+  "test_metrics": {
+    "mse": 0.7645427584648132,
+    "cosine_sim": 0.9903302192687988,
+    "explained_var": 0.20120685844748298,
+    "target_embedding_std": 0.3308623135089874,
+    "context_embedding_std": 0.4192691445350647,
+    "intervention_sensitivity": 0.5145994325478872,
+    "intervention_sensitivity_relative": 1.5553280368811446,
+    "n_examples": 640
+  },
+  "linear_probe_sx_to_z": {
+    "train_acc": 0.4857811977249916,
+    "eval_acc": 0.45,
+    "per_class_eval_acc": {
+      "0": 0.5406698564593302,
+      "1": 0.4577777777777778,
+      "2": 0.34951456310679613
+    },
+    "majority_baseline": 0.3515625
+  },
+  "ablation_mse": {
+    "true_z (trained objective)": {
+      "mse": 0.7645428240299225,
+      "cosine_to_s_y": 0.990330308675766,
+      "n": 640
+    },
+    "fixed z=0 (ignore treatment)": {
+      "mse": 0.7867189943790436,
+      "cosine_to_s_y": 0.9903270840644837,
+      "n": 640
+    },
+    "in-batch shuffled z (misaligned)": {
+      "mse": 0.7655794322490692,
+      "cosine_to_s_y": 0.9902783513069153,
+      "n": 640
+    },
+    "(z+1) mod 3 (shift)": {
+      "mse": 0.7633741855621338,
+      "cosine_to_s_y": 0.9902484893798829,
+      "n": 640
+    },
+    "random z embedding (placebo)": {
+      "mse": 1.1148523688316345,
+      "cosine_to_s_y": 0.9859652400016785,
+      "n": 640
+    }
+  },
+  "permutation_null_mse": {
+    "mse_with_true_z": 0.7645428240299225,
+    "perm_null_mse_mean": 0.7651421655961615,
+    "perm_null_mse_std": 0.0002624650218004442,
+    "n_permutations": 199,
+    "p_onesided_better_than_shuffle": 0.0,
+    "p_twosided_approx": 0.0
+  },
+  "z_alignment_true_vs_mismatch": {
+    "mean_cosine_z_eq_z_true": 0.9903303142637014,
+    "mean_max_cosine_z_ne_z_true": 0.990444204583764,
+    "gap": -0.00011389032006263733,
+    "n": 640
+  },
+  "z_argmax_on_sy": {
+    "argmax_z_accuracy": 0.384375,
+    "n": 640,
+    "chance_3class": 0.3333333333333333
+  },
+  "pre_hba1c_risk_strata": [
+    {
+      "stratum": "tertile_low_<= 6.00",
+      "n": 82,
+      "intervention_sensitivity": 0.5178045431772867,
+      "n_metformin": 25
+    },
+    {
+      "stratum": "tertile_mid_6.00..6.94",
+      "n": 77,
+      "intervention_sensitivity": 0.515939732392629,
+      "n_metformin": 40
+    },
+    {
+      "stratum": "tertile_high_> 6.94",
+      "n": 80,
+      "intervention_sensitivity": 0.5139435529708862,
+      "n_metformin": 39
+    }
+  ],
+  "qdrant_unfiltered": {
+    "n_eval_patients": 198,
+    "top_k": 10,
+    "latency_ms": {
+      "mean": 9.04848249105859,
+      "median": 8.61560000339523,
+      "p95": 12.024129995552357,
+      "p99": 13.916867995867511
+    },
+    "per_z": {
+      "metformin": {
+        "z": 0,
+        "treatment_match_rate": 0.27424242424242423,
+        "random_treatment_match_rate": 0.32525252525252524,
+        "lift_over_random": -0.051010101010101006,
+        "outcomes": {
+          "hba1c": {
+            "display": "HbA1c (%)",
+            "mean_of_top_k_means": 6.356079888032324,
+            "std_of_top_k_means": 0.5100149666198636,
+            "n_patients": 195
+          },
+          "ldl_chol": {
+            "display": "LDL cholesterol",
+            "mean_of_top_k_means": 94.89378591090073,
+            "std_of_top_k_means": 24.617251579069336,
+            "n_patients": 135
+          },
+          "systolic_bp": {
+            "display": "Systolic BP (mmHg)",
+            "mean_of_top_k_means": 129.51366420698142,
+            "std_of_top_k_means": 4.388043353285162,
+            "n_patients": 198
+          },
+          "diastolic_bp": {
+            "display": "Diastolic BP",
+            "mean_of_top_k_means": 75.71065859196754,
+            "std_of_top_k_means": 2.7976770051508013,
+            "n_patients": 198
+          },
+          "bmi": {
+            "display": "BMI",
+            "mean_of_top_k_means": 31.529194259310987,
+            "std_of_top_k_means": 3.0036311528499855,
+            "n_patients": 198
+          },
+          "glucose": {
+            "display": "Glucose",
+            "mean_of_top_k_means": 113.66524913938301,
+            "std_of_top_k_means": 12.223569043843172,
+            "n_patients": 198
+          },
+          "hdl_chol": {
+            "display": "HDL cholesterol",
+            "mean_of_top_k_means": 49.60266724950097,
+            "std_of_top_k_means": 4.59255988879383,
+            "n_patients": 198
+          },
+          "total_chol": {
+            "display": "Total cholesterol",
+            "mean_of_top_k_means": 165.01081869158392,
+            "std_of_top_k_means": 11.32573566117472,
+            "n_patients": 198
+          }
+        }
+      },
+      "atorvastatin": {
+        "z": 1,
+        "treatment_match_rate": 0.5848484848484848,
+        "random_treatment_match_rate": 0.36363636363636365,
+        "lift_over_random": 0.2212121212121212,
+        "outcomes": {
+          "hba1c": {
+            "display": "HbA1c (%)",
+            "mean_of_top_k_means": 6.346850755637284,
+            "std_of_top_k_means": 0.5127244399857754,
+            "n_patients": 198
+          },
+          "ldl_chol": {
+            "display": "LDL cholesterol",
+            "mean_of_top_k_means": 91.17527564439457,
+            "std_of_top_k_means": 23.16052631037573,
+            "n_patients": 131
+          },
+          "systolic_bp": {
+            "display": "Systolic BP (mmHg)",
+            "mean_of_top_k_means": 130.63309558754034,
+            "std_of_top_k_means": 4.334720774854848,
+            "n_patients": 198
+          },
+          "diastolic_bp": {
+            "display": "Diastolic BP",
+            "mean_of_top_k_means": 75.82482970031157,
+            "std_of_top_k_means": 3.219825938405525,
+            "n_patients": 198
+          },
+          "bmi": {
+            "display": "BMI",
+            "mean_of_top_k_means": 31.296554241337912,
+            "std_of_top_k_means": 2.7542288795664147,
+            "n_patients": 198
+          },
+          "glucose": {
+            "display": "Glucose",
+            "mean_of_top_k_means": 111.39010346339111,
+            "std_of_top_k_means": 10.301844569436415,
+            "n_patients": 198
+          },
+          "hdl_chol": {
+            "display": "HDL cholesterol",
+            "mean_of_top_k_means": 49.93898038744869,
+            "std_of_top_k_means": 4.289436500815843,
+            "n_patients": 198
+          },
+          "total_chol": {
+            "display": "Total cholesterol",
+            "mean_of_top_k_means": 164.32015498395108,
+            "std_of_top_k_means": 10.81686414569103,
+            "n_patients": 198
+          }
+        }
+      },
+      "lisinopril": {
+        "z": 2,
+        "treatment_match_rate": 0.1590909090909091,
+        "random_treatment_match_rate": 0.31767676767676767,
+        "lift_over_random": -0.15858585858585858,
+        "outcomes": {
+          "hba1c": {
+            "display": "HbA1c (%)",
+            "mean_of_top_k_means": 6.338431923027621,
+            "std_of_top_k_means": 0.49207652237894145,
+            "n_patients": 198
+          },
+          "ldl_chol": {
+            "display": "LDL cholesterol",
+            "mean_of_top_k_means": 91.62111989581396,
+            "std_of_top_k_means": 24.9665217721315,
+            "n_patients": 126
+          },
+          "systolic_bp": {
+            "display": "Systolic BP (mmHg)",
+            "mean_of_top_k_means": 130.92880294149037,
+            "std_of_top_k_means": 4.240345044060422,
+            "n_patients": 198
+          },
+          "diastolic_bp": {
+            "display": "Diastolic BP",
+            "mean_of_top_k_means": 75.83781602889925,
+            "std_of_top_k_means": 2.8176871810711432,
+            "n_patients": 198
+          },
+          "bmi": {
+            "display": "BMI",
+            "mean_of_top_k_means": 31.347880099564005,
+            "std_of_top_k_means": 2.747470368821654,
+            "n_patients": 198
+          },
+          "glucose": {
+            "display": "Glucose",
+            "mean_of_top_k_means": 110.70744047249015,
+            "std_of_top_k_means": 9.852652387866263,
+            "n_patients": 198
+          },
+          "hdl_chol": {
+            "display": "HDL cholesterol",
+            "mean_of_top_k_means": 50.355635736866674,
+            "std_of_top_k_means": 3.95332138697516,
+            "n_patients": 198
+          },
+          "total_chol": {
+            "display": "Total cholesterol",
+            "mean_of_top_k_means": 167.69063205134893,
+            "std_of_top_k_means": 11.26668563869017,
+            "n_patients": 198
+          }
+        }
+      }
+    },
+    "outcome_divergence_across_z": {
+      "hba1c": {
+        "display": "HbA1c (%)",
+        "mean_abs_diff_across_z": 0.22021934602320606,
+        "n_patients": 198
+      },
+      "ldl_chol": {
+        "display": "LDL cholesterol",
+        "mean_abs_diff_across_z": 4.890813608244649,
+        "n_patients": 127
+      },
+      "systolic_bp": {
+        "display": "Systolic BP (mmHg)",
+        "mean_abs_diff_across_z": 1.8209133041465015,
+        "n_patients": 198
+      },
+      "diastolic_bp": {
+        "display": "Diastolic BP",
+        "mean_abs_diff_across_z": 1.2086492916282714,
+        "n_patients": 198
+      },
+      "bmi": {
+        "display": "BMI",
+        "mean_abs_diff_across_z": 1.1573323755629727,
+        "n_patients": 198
+      },
+      "glucose": {
+        "display": "Glucose",
+        "mean_abs_diff_across_z": 4.439675059789237,
+        "n_patients": 198
+      },
+      "hdl_chol": {
+        "display": "HDL cholesterol",
+        "mean_abs_diff_across_z": 2.4938710751497064,
+        "n_patients": 198
+      },
+      "total_chol": {
+        "display": "Total cholesterol",
+        "mean_abs_diff_across_z": 7.770959191085067,
+        "n_patients": 198
+      }
+    },
+    "n_indexed": 3053,
+    "index_build_secs": 18.497917652130127
+  },
+  "qdrant_stratified_oracle": {
+    "per_intervention": {
+      "metformin": {
+        "library_n_points": 792,
+        "n_cosine_values": 1980,
+        "mean_topk_cosine_across_queries": 0.9960039946526128
+      },
+      "atorvastatin": {
+        "library_n_points": 1050,
+        "n_cosine_values": 1980,
+        "mean_topk_cosine_across_queries": 0.9964563165711694
+      },
+      "lisinopril": {
+        "library_n_points": 547,
+        "n_cosine_values": 1980,
+        "mean_topk_cosine_across_queries": 0.995793992441705
+      }
+    },
+    "interpretation": "Within-z library only. Mean cosine = embedding proximity in stratum. Treatment match is 100% by filter (ceiling for treatment-mix metric, not a lift claim)."
+  },
+  "baseline_comparison": {
+    "protocol": "Baselines predict the same target-encoder s_y. Ridge / sklearn-MLP / torch-MLP use frozen s_x from the trained JEPA context encoder (+ one-hot z). Pooled-raw MLP uses mean-pooled standardized pre-window labs (+ z), no transformer \u2014 a classical tabular baseline.",
+    "models": {
+      "Ridge(s_x + one-hot z)": {
+        "mse": 0.08113014698028564,
+        "cosine_sim": 0.9913919568061829,
+        "explained_var": 0.3268222200623889,
+        "mse_normalized": 0.00013450090773403645
+      },
+      "Ridge(s_x only, no z)": {
+        "mse": 0.08122832328081131,
+        "cosine_sim": 0.9913814663887024,
+        "explained_var": 0.3260025839585329,
+        "mse_normalized": 0.00013466370000969619
+      },
+      "sklearn MLP(s_x + one-hot z)": {
+        "mse": 0.09800422191619873,
+        "cosine_sim": 0.9905713796615601,
+        "explained_var": 0.18808457109321752,
+        "mse_normalized": 0.00014732344425283372
+      },
+      "PyTorch MLP(s_x + one-hot z)": {
+        "mse": 0.08380986005067825,
+        "cosine_sim": 0.9911549687385559,
+        "explained_var": 0.3053124057867299,
+        "mse_normalized": 0.00013820253661833704
+      },
+      "PyTorch MLP(mean-pooled raw pre + z)": {
+        "mse": 0.12721414864063263,
+        "cosine_sim": 0.9867132306098938,
+        "explained_var": -0.05518986276047744,
+        "mse_normalized": 0.00020760693587362766
+      }
+    },
+    "paired_bootstrap_vs_jepa": {
+      "Ridge(s_x + one-hot z)": {
+        "mean_mse_improvement_base_minus_jepa": -87.47682189941406,
+        "bootstrap_ci95_low": -89.44352226257324,
+        "bootstrap_ci95_high": -85.45764427185058,
+        "bootstrap_p_two_sided": 0.0,
+        "n_bootstrap": 2000,
+        "fraction_bootstraps_jepa_better": 0.0
+      },
+      "sklearn MLP(s_x + one-hot z)": {
+        "mean_mse_improvement_base_minus_jepa": -85.31694030761719,
+        "bootstrap_ci95_low": -87.36383724212646,
+        "bootstrap_ci95_high": -83.24996585845948,
+        "bootstrap_p_two_sided": 0.0,
+        "n_bootstrap": 2000,
+        "fraction_bootstraps_jepa_better": 0.0
+      },
+      "PyTorch MLP(s_x + one-hot z)": {
+        "mean_mse_improvement_base_minus_jepa": -87.13382720947266,
+        "bootstrap_ci95_low": -89.08128681182862,
+        "bootstrap_ci95_high": -85.0543851852417,
+        "bootstrap_p_two_sided": 0.0,
+        "n_bootstrap": 2000,
+        "fraction_bootstraps_jepa_better": 0.0
+      },
+      "PyTorch MLP(mean-pooled raw pre + z)": {
+        "mean_mse_improvement_base_minus_jepa": -81.57807159423828,
+        "bootstrap_ci95_low": -84.12155494689941,
+        "bootstrap_ci95_high": -78.86254234313965,
+        "bootstrap_p_two_sided": 0.0,
+        "n_bootstrap": 2000,
+        "fraction_bootstraps_jepa_better": 0.0
+      }
+    },
+    "paired_bootstrap_normalized_vs_ridge": {
+      "Ridge(s_x + one-hot z), sphere MSE": {
+        "mean_mse_improvement_base_minus_jepa": -0.0021232536528259516,
+        "bootstrap_ci95_low": -0.0026594837254378945,
+        "bootstrap_ci95_high": -0.001645836923853495,
+        "bootstrap_p_two_sided": 0.0,
+        "n_bootstrap": 2000,
+        "fraction_bootstraps_jepa_better": 0.0
+      }
+    },
+    "best_baseline_by_mse": {
+      "name": "Ridge(s_x + one-hot z)",
+      "mse": 0.08113014698028564
+    },
+    "best_baseline_by_mse_normalized": {
+      "name": "Ridge(s_x + one-hot z)",
+      "mse_normalized": 0.00013450090773403645
+    },
+    "jepa_reference": {
+      "mse": 0.7645427584648132,
+      "cosine_sim": 0.9903302192687988,
+      "explained_var": 0.20120685844748298,
+      "mse_normalized": 0.0001510888250777498
+    }
+  },
+  "verdicts": [
+    {
+      "name": "Prognostic gap (true z better than all z=0)",
+      "ok": true,
+      "detail": "MSE true=0.76454 vs z=0 0.78672"
+    },
+    {
+      "name": "Permutation null: true z beats shuffled z (p one-sided)",
+      "ok": true,
+      "detail": "p = 0.0000 (H0: random re-labeling as good as true z)"
+    },
+    {
+      "name": "Z alignment gap (at-true z vs best wrong z)",
+      "ok": false,
+      "detail": "gap = -0.0001"
+    },
+    {
+      "name": "At least one z with twin retrieval lift > 1pp (associative)",
+      "ok": true,
+      "detail": "See unfiltered Qdrant table; a miss is not fatal if the claim is only latent JEPA, not counterfactual retrieval"
+    },
+    {
+      "name": "Neg. control: in-batch shuffled z hurts MSE vs true z (>=0.1%)",
+      "ok": true,
+      "detail": "true 0.76454 vs shuf 0.76558 (+0.14%)"
+    },
+    {
+      "name": "Neg. control: random z embedding (placebo) has worse MSE",
+      "ok": true,
+      "detail": "placebo mse 1.11485"
+    },
+    {
+      "name": "s_x encodes z above majority baseline (confounding probe)",
+      "ok": true,
+      "detail": "probe acc 45.0% vs majority 35.2%"
+    },
+    {
+      "name": "Raw MSE: note Ridge/MLP optimize this; JEPA uses cosine (see \u00a71b)",
+      "ok": true,
+      "detail": "JEPA raw MSE 0.7645 vs best baseline Ridge(s_x + one-hot z) 0.0811 \u2014 interpret with mse_normalized / cosine"
+    },
+    {
+      "name": "JEPA scale-free MSE within 25% of best baseline (competitive)",
+      "ok": true,
+      "detail": "JEPA 0.000151 vs best Ridge(s_x + one-hot z) 0.000135 (linear readouts on frozen s_x are very strong)"
+    },
+    {
+      "name": "JEPA cosine similarity within 0.005 of best baseline",
+      "ok": true,
+      "detail": "JEPA cos 0.9903 vs best baseline cos 0.9914"
+    },
+    {
+      "name": "Bootstrap (sphere MSE): JEPA vs Ridge(s_x+z) (paired)",
+      "ok": false,
+      "detail": "\u0394(Ridge\u2212JEPA) mean -0.002123 CI [-0.002659, -0.001646], p\u22480.0000 (near-tie expected)"
+    }
+  ]
+}

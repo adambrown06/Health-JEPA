@@ -1,0 +1,35 @@
+\begin{tabular}{lrr}
+\toprule
+model / ablation & macro MAE & macro $R^2$ \\
+\midrule
+POP\_MEAN (shared) & 16.294 & -0.003 \\
+NO\_CHANGE (shared) & 31.557 & -6.780 \\
+RIDGE (shared) & 14.661 & 0.118 \\
+GBT (shared) & 12.810 & 0.362 \\
+MLP\_RAW (shared) & 15.507 & -0.103 \\
+GRU\_E2E (shared) & 13.667 & 0.288 \\
+TSENCODER\_E2E (shared) & 13.734 & 0.270 \\
+\midrule
+JEPA\_RIDGE [full] & 14.777 & 0.192 \\
+JEPA\_RIDGE\_PRED [full] & 14.617 & 0.155 \\
+JEPA\_TWIN [full] & 16.963 & -0.095 \\
+JEPA\_RIDGE [small\_z] & 14.484 & 0.210 \\
+JEPA\_RIDGE\_PRED [small\_z] & 14.585 & 0.141 \\
+JEPA\_TWIN [small\_z] & 16.609 & -0.047 \\
+JEPA\_RIDGE [no\_sigreg] & 14.408 & 0.207 \\
+JEPA\_RIDGE\_PRED [no\_sigreg] & 14.357 & 0.180 \\
+JEPA\_TWIN [no\_sigreg] & 16.606 & -0.062 \\
+JEPA\_RIDGE [no\_orth] & 14.778 & 0.192 \\
+JEPA\_RIDGE\_PRED [no\_orth] & 14.600 & 0.157 \\
+JEPA\_TWIN [no\_orth] & 16.950 & -0.092 \\
+JEPA\_RIDGE [no\_lewm] & 14.410 & 0.207 \\
+JEPA\_RIDGE\_PRED [no\_lewm] & 14.347 & 0.180 \\
+JEPA\_TWIN [no\_lewm] & 16.650 & -0.064 \\
+JEPA\_RIDGE [concat] & 14.609 & 0.191 \\
+JEPA\_RIDGE\_PRED [concat] & 14.763 & 0.132 \\
+JEPA\_TWIN [concat] & 16.859 & -0.081 \\
+JEPA\_RIDGE [vanilla] & 14.483 & 0.189 \\
+JEPA\_RIDGE\_PRED [vanilla] & 14.846 & 0.150 \\
+JEPA\_TWIN [vanilla] & 16.406 & -0.062 \\
+\bottomrule
+\end{tabular}

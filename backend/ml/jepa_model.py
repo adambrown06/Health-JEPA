@@ -168,14 +168,71 @@ class TargetEncoder(TimeSeriesEncoder):
 
 
 # ======================================================================
-# Predictor
+# Predictor — AdaLN-conditioned (DiT-style, LeWorldModel-style)
 # ======================================================================
 
-class Predictor(nn.Module):
-    """MLP mapping [s_x ‖ embedded_z] → predicted ŝ_y.
+class AdaLN(nn.Module):
+    """Adaptive Layer Normalization (Peebles & Xie 2023, "Scalable Diffusion
+    Models with Transformers"; LeWorldModel 2026).
 
-    Intentionally bottlenecked relative to the encoders to prevent
-    representation collapse (per I-JEPA design).
+    Replaces LayerNorm's fixed (gamma, beta) affine parameters with per-sample
+    parameters produced from a conditioning vector ``c`` (here: the intervention
+    embedding z):
+
+        AdaLN(h, c) = (1 + gamma(c)) * (h - mean) / std + beta(c)
+
+    Initialized AdaLN-Zero style: (gamma, beta) projections start at 0 so the
+    normalization is an identity at step 0 (predictor behaves as if z is ignored)
+    and the model must *learn* to exploit z-conditioning as it benefits training.
+    """
+
+    def __init__(self, hidden_dim: int, cond_dim: int):
+        super().__init__()
+        self.norm = nn.LayerNorm(hidden_dim, elementwise_affine=False)
+        self.cond_proj = nn.Linear(cond_dim, 2 * hidden_dim)
+        nn.init.zeros_(self.cond_proj.weight)
+        nn.init.zeros_(self.cond_proj.bias)
+
+    def forward(self, h: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
+        h = self.norm(h)
+        gamma, beta = self.cond_proj(c).chunk(2, dim=-1)
+        return h * (1.0 + gamma) + beta
+
+
+class AdaLNBlock(nn.Module):
+    """Residual MLP block with AdaLN conditioning and a zero-init residual gate:
+
+        h' = h + alpha(c) * MLP( AdaLN(h, c) )
+
+    ``alpha(c)`` is initialized to 0 (AdaLN-Zero), so the block is an identity
+    map at initialization. This keeps training stable and lets the optimizer
+    discover when to let z influence the predictor's activations.
+    """
+
+    def __init__(self, hidden_dim: int, cond_dim: int, dropout: float = 0.1):
+        super().__init__()
+        self.adaln = AdaLN(hidden_dim, cond_dim)
+        self.fc = nn.Linear(hidden_dim, hidden_dim)
+        self.act = nn.GELU()
+        self.drop = nn.Dropout(dropout)
+        self.gate = nn.Linear(cond_dim, hidden_dim)
+        nn.init.zeros_(self.gate.weight)
+        nn.init.zeros_(self.gate.bias)
+
+    def forward(self, h: torch.Tensor, c: torch.Tensor) -> torch.Tensor:
+        residual = h
+        h = self.adaln(h, c)
+        h = self.drop(self.act(self.fc(h)))
+        alpha = self.gate(c)
+        return residual + alpha * h
+
+
+class ConcatPredictor(nn.Module):
+    """Vanilla concat-MLP predictor (the pre-AdaLN baseline).
+
+        h = concat(s_x, embed(z))  →  MLP  →  ŝ_y
+
+    Kept as a clean ablation to show the effect of AdaLN conditioning.
     """
 
     def __init__(
@@ -187,21 +244,43 @@ class Predictor(nn.Module):
         dropout: float = 0.1,
     ):
         super().__init__()
-        layers: list[nn.Module] = [
-            nn.Linear(d_model + z_dim, hidden_dim),
-            nn.GELU(),
-            nn.LayerNorm(hidden_dim),
-            nn.Dropout(dropout),
-        ]
-        for _ in range(n_hidden_layers - 1):
-            layers += [
-                nn.Linear(hidden_dim, hidden_dim),
-                nn.GELU(),
-                nn.LayerNorm(hidden_dim),
-                nn.Dropout(dropout),
-            ]
+        layers: list[nn.Module] = [nn.Linear(d_model + z_dim, hidden_dim), nn.GELU(), nn.Dropout(dropout)]
+        for _ in range(max(n_hidden_layers - 1, 0)):
+            layers += [nn.Linear(hidden_dim, hidden_dim), nn.GELU(), nn.Dropout(dropout)]
         layers.append(nn.Linear(hidden_dim, d_model))
         self.net = nn.Sequential(*layers)
+
+    def forward(self, s_x: torch.Tensor, embedded_z: torch.Tensor) -> torch.Tensor:
+        return self.net(torch.cat([s_x, embedded_z], dim=-1))
+
+
+class Predictor(nn.Module):
+    """Intervention-conditioned predictor:
+
+        s_x ─► input_proj ─► [AdaLNBlock(z)] × n ─► AdaLN(z) ─► output_proj ─► ŝ_y
+
+    Instead of the old ``concat(s_x, z) → MLP`` design, z modulates *every*
+    predictor layer via AdaLN. This is much stronger conditioning: the 3 drug
+    embeddings can't get "averaged out" through a wide hidden layer because
+    they control that layer's normalization statistics directly.
+    """
+
+    def __init__(
+        self,
+        d_model: int = 256,
+        z_dim: int = 32,
+        hidden_dim: int = 512,
+        n_hidden_layers: int = 3,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+        self.input_proj = nn.Linear(d_model, hidden_dim)
+        self.blocks = nn.ModuleList([
+            AdaLNBlock(hidden_dim, cond_dim=z_dim, dropout=dropout)
+            for _ in range(n_hidden_layers)
+        ])
+        self.final_adaln = AdaLN(hidden_dim, cond_dim=z_dim)
+        self.output_proj = nn.Linear(hidden_dim, d_model)
 
     def forward(self, s_x: torch.Tensor, embedded_z: torch.Tensor) -> torch.Tensor:
         """
@@ -214,7 +293,11 @@ class Predictor(nn.Module):
         -------
         (B, d_model) predicted future-state embedding ŝ_y
         """
-        return self.net(torch.cat([s_x, embedded_z], dim=-1))
+        h = self.input_proj(s_x)
+        for block in self.blocks:
+            h = block(h, embedded_z)
+        h = self.final_adaln(h, embedded_z)
+        return self.output_proj(h)
 
 
 # ======================================================================
@@ -243,9 +326,13 @@ class CausalJEPA(nn.Module):
         z_dim: int = 32,
         predictor_hidden: int = 512,
         predictor_layers: int = 3,
+        predictor_style: str = "adaln",  # "adaln" | "concat"
         ema_momentum: float = 0.99,
     ):
         super().__init__()
+        if predictor_style not in {"adaln", "concat"}:
+            raise ValueError(f"predictor_style must be 'adaln' or 'concat', got {predictor_style!r}")
+        self.predictor_style = predictor_style
 
         encoder_kwargs = dict(
             num_features=num_features,
@@ -268,7 +355,8 @@ class CausalJEPA(nn.Module):
         )
 
         # ── Predictor  [s_x ‖ embed(z)] → ŝ_y ───────────────────────
-        self.predictor = Predictor(
+        predictor_cls = Predictor if predictor_style == "adaln" else ConcatPredictor
+        self.predictor = predictor_cls(
             d_model=d_model,
             z_dim=z_dim,
             hidden_dim=predictor_hidden,

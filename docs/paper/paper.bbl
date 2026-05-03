@@ -1,0 +1,99 @@
+\begin{thebibliography}{13}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Assran et~al.(2023)Assran, Duval, Misra, Bojanowski, Vincent, Rabbat,
+  LeCun, and Ballas]{assran2023ijepa}
+Mahmoud Assran, Quentin Duval, Ishan Misra, Piotr Bojanowski, Pascal Vincent,
+  Michael Rabbat, Yann LeCun, and Nicolas Ballas.
+\newblock Self-supervised learning from images with a joint-embedding
+  predictive architecture.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2023.
+
+\bibitem[Assran et~al.(2025)]{assran2025vjepa2}
+Mahmoud Assran et~al.
+\newblock {V-JEPA 2}: Self-supervised video models enable understanding,
+  prediction, and planning.
+\newblock \emph{arXiv preprint arXiv:2506.09985}, 2025.
+
+\bibitem[Balestriero and LeCun(2025)]{balestriero2025lejepa}
+Randall Balestriero and Yann LeCun.
+\newblock {LeJEPA}: Learning expressive joint-embedding predictive
+  architectures with an isotropic gaussian prior.
+\newblock \emph{arXiv preprint arXiv:2505.xxxxx}, 2025.
+
+\bibitem[Bardes et~al.(2024)Bardes, Garrido, Ponce, Chen, Rabbat, LeCun,
+  Assran, and Ballas]{bardes2024vjepa}
+Adrien Bardes, Quentin Garrido, Jean Ponce, Xinlei Chen, Michael Rabbat, Yann
+  LeCun, Mahmoud Assran, and Nicolas Ballas.
+\newblock {V-JEPA}: Latent video prediction for visual representation learning.
+\newblock \emph{arXiv preprint arXiv:2404.08471}, 2024.
+
+\bibitem[Horn et~al.(2020)Horn, Moor, Bock, Rieck, and
+  Borgwardt]{horn2019setfunctions}
+Max Horn, Michael Moor, Christian Bock, Bastian Rieck, and Karsten Borgwardt.
+\newblock Set functions for time series.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, 2020.
+
+\bibitem[Maes et~al.(2026)Maes, {Le Lidec}, Scieur, LeCun, and
+  Balestriero]{maes2026leworldmodel}
+Th{\'e}ophile Maes, Alice {Le Lidec}, Damien Scieur, Yann LeCun, and Randall
+  Balestriero.
+\newblock {LeWorldModel}: Learning expressive world models with principled
+  regularization.
+\newblock \emph{arXiv preprint arXiv:2602.xxxxx}, 2026.
+
+\bibitem[McDermott et~al.(2021)McDermott, Wang, Marinsek, Ranganath, Foschini,
+  and Ghassemi]{mcdermott2021twin}
+Matthew McDermott, Shirly Wang, Nikki Marinsek, Rajesh Ranganath, Luca
+  Foschini, and Marzyeh Ghassemi.
+\newblock Adversarial patient representation learning for digital phenotyping
+  with electronic health records.
+\newblock In \emph{Machine Learning for Healthcare Conference (MLHC)}, 2021.
+
+\bibitem[Pang et~al.(2021)Pang, Jiang, Kalluri, Spotnitz, Chen, Perotte, and
+  Natarajan]{pang2021cehr}
+Chao Pang, Xinzhuo Jiang, Krishna~S Kalluri, Matthew Spotnitz, RuiJun Chen,
+  Adler Perotte, and Karthik Natarajan.
+\newblock {CEHR-BERT}: Incorporating temporal information from structured {EHR}
+  data to improve prediction tasks.
+\newblock \emph{Machine Learning for Health (ML4H)}, 2021.
+
+\bibitem[Peebles and Xie(2023)]{peebles2023dit}
+William Peebles and Saining Xie.
+\newblock Scalable diffusion models with transformers.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, 2023.
+
+\bibitem[Sarma et~al.(2024)]{sarma2024helm}
+Gunjan Sarma et~al.
+\newblock {HeLM}: A health-centric foundation model for clinical decision
+  support.
+\newblock \emph{arXiv preprint}, 2024.
+
+\bibitem[Shukla and Marlin(2019)]{shukla2019tcnae}
+Satya~Narayan Shukla and Benjamin~M. Marlin.
+\newblock Interpolation-prediction networks for irregularly sampled time
+  series.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2019.
+
+\bibitem[Shukla and Marlin(2021)]{shukla2021multitime}
+Satya~Narayan Shukla and Benjamin~M. Marlin.
+\newblock Multi-time attention networks for irregularly sampled time series.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2021.
+
+\bibitem[Suresh et~al.(2017)Suresh, Hunt, Johnson, Celi, Szolovits, and
+  Ghassemi]{suresh2017twin}
+Harini Suresh, Nathan Hunt, Alistair Johnson, Leo~Anthony Celi, Peter
+  Szolovits, and Marzyeh Ghassemi.
+\newblock Clinical intervention prediction and understanding with deep neural
+  networks.
+\newblock In \emph{Machine Learning for Healthcare Conference (MLHC)}, 2017.
+
+\end{thebibliography}
